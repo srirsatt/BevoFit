@@ -35,4 +35,30 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
+# Python
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# Virtual envs
+.env/
+.venv/
+venv/
+env/
+**/env*/
+**/.venv*/
+
+# OS/editor
+.DS_Store
+.vscode/
+.idea/
+
+# ML artifacts
+*.tflite
+*.h5
+*.keras
+*.ckpt
+saved_model/
+logs/
+
 app-example
