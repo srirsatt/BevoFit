@@ -2,7 +2,7 @@
 
 import os
 import tensorflow as tf 
-import numpy as np 
+import numpy, pathlib, collections as np 
 import matplotlib.pyplot as plt 
 import kagglehub
 from tensorflow.keras.applications.mobilenet_v3 import preprocess_input
@@ -27,7 +27,7 @@ data_dir = PATH
 #validation_dir = os.path.join(PATH, 'validation')
 
 BATCH_SIZE = 32
-IMG_SIZE = (160, 160) # px, px
+IMG_SIZE = (224, 224) # px, px
 
 train_dataset = tf.keras.utils.image_dataset_from_directory(
     data_dir,
@@ -71,8 +71,8 @@ print("Num val batches: %d" % tf.data.experimental.cardinality(validation_datase
 
 # autotune dataset, image loading performance benefit
 AUTOTUNE = tf.data.AUTOTUNE
-train_dataset = train_dataset.prefetch(buffer_size=AUTOTUNE)
-validation_dataset = validation_dataset.prefetch(buffer_size=AUTOTUNE)
+train_dataset = train_dataset.shuffle(1000).cache().prefetch(tf.data.AUTOTUNE)
+validation_dataset = validation_dataset.cache().prefetch(tf.data.AUTOTUNE)
 #test_dataset = test_dataset.prefetch(buffer_size=AUTOTUNE)
 
 
@@ -81,6 +81,10 @@ validation_dataset = validation_dataset.prefetch(buffer_size=AUTOTUNE)
 data_augmentation = tf.keras.Sequential([
     tf.keras.layers.RandomFlip('horizontal'),  
     tf.keras.layers.RandomRotation(0.2),
+    tf.keras.layers.RandomZoom(0.2),
+    tf.keras.layers.RandomTranslation(0.1, 0.1),
+    tf.keras.layers.RandomContrast(0.1), 
+    tf.keras.layers.RandomBrightness(0.1),
 ])
 
 # model rescaling (kinda like normalization in ML - [-1, 1] inputs)
@@ -90,14 +94,22 @@ rescale = tf.keras.layers.Rescaling(1./127.5, offset=-1)
 # for now, pretrained convnets
 # later, fine-tuned convnets - diff layers - real dataset
 IMG_SHAPE = IMG_SIZE + (3,)
-base_model = tf.keras.applications.MobileNetV3Small(input_shape=IMG_SHAPE, include_top=False, weights='imagenet')
+base_model = tf.keras.applications.MobileNetV3Large(input_shape=IMG_SHAPE, include_top=False, weights='imagenet')
+base_model.trainable = False
 
 image_batch, label_batch = next(iter(validation_dataset))
 feature_batch = base_model(image_batch)
 print(feature_batch.shape) # feature shape MobileNetV3 -> (32, 5, 5, 576)
 
-base_model.trainable = False
 base_model.summary()
+
+print ("num layers in base: ", len(base_model.layers))
+
+'''
+fine_tune_layer = 100
+for layer in base_model.layers[:fine_tune_layer]:
+    layer.trainable = False
+'''
 
 global_average_layer = tf.keras.layers.GlobalAveragePooling2D() # 2d average pooling input signal conv neural net
 feature_batch_avg = global_average_layer(feature_batch)
@@ -107,20 +119,22 @@ prediction_layer = tf.keras.layers.Dense(1, activation="sigmoid")
 prediction_batch = prediction_layer(feature_batch_avg)
 print(prediction_batch.shape)
 
+wd = 1e-5
+
 inputs = tf.keras.Input(shape=IMG_SHAPE)
 x = data_augmentation(inputs)
 x = preprocess_input(x)
-x = base_model(x, training=False)
+x = base_model(x)
 x = global_average_layer(x)
 x = tf.keras.layers.Dropout(0.2)(x)
-outputs = tf.keras.layers.Dense(num_classes, activation="softmax")(x)
+x = tf.keras.layers.Dense(256, activation="relu", kernel_regularizer=tf.keras.regularizers.L2(wd))(x)
+outputs = tf.keras.layers.Dense(num_classes, activation="softmax", kernel_regularizer=tf.keras.regularizers.L2(wd))(x)
 model = tf.keras.Model(inputs, outputs)
 
 model.summary()
 
 # print diagram
 tf.keras.utils.plot_model(model, show_shapes=True)
-
 
 # compile, train over epochs
 base_learning_rate = 0.0001 
@@ -134,10 +148,44 @@ loss0, accuracy0 = model.evaluate(validation_dataset)
 print("initial loss: {:.2f}".format(loss0))
 print("initial accuracy: {:.2f}".format(accuracy0))
 
+fine_tune_epochs = 20 + epochs
+
+root = pathlib.Path(data_dir)
+counts = {p.name: len(list(p.glob("*"))) for p in root.iterdir() if p.is_dir()}
+print(counts)
+
+idx = {name:i for i, name in enumerate(class_names)}
+total = sum(counts.values())
+class_weight = {idx[k]: total/(len(counts)*v) for k, v, in counts.items()}
+print(class_weight)
+
 # model training history
 history = model.fit(train_dataset,
                     epochs=epochs,
-                    validation_data=validation_dataset)
+                    validation_data=validation_dataset, class_weight=class_weight)
+
+# fine tune set
+fine_tune_at = int(0.7 * len(base_model.layers))
+base_model.trainable = True
+for layer in base_model.layers[:fine_tune_at]:
+    layer.trainable = False
+
+model.compile(
+    optimizer=tf.keras.optimizers.Adam(learning_rate = base_learning_rate/10),
+    loss=tf.keras.losses.SparseCategoricalCrossentropy(),
+    metrics=['accuracy']
+)
+
+cb = [
+    tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=3),
+    tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=6, restore_best_weights=True)
+]
+
+history_fine = model.fit(train_dataset,
+                         epochs=fine_tune_epochs,
+                         validation_data=validation_dataset,
+                         initial_epoch=len(history.epoch),
+                         callbacks=cb, class_weight=class_weight)
 
 # testing with test dataset - in our case, we need to change this code for image verification over new image fed in.
 loss, accuracy = model.evaluate(validation_dataset)
