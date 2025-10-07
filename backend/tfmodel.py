@@ -1,5 +1,4 @@
 # generation of the tensorflow model, to get exported to .tflite for use within react-native
-
 import os
 import tensorflow as tf 
 import numpy, pathlib, collections as np 
