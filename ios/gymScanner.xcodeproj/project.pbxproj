@@ -8,25 +8,25 @@
 
 /* Begin PBXBuildFile section */
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
+		364BA32E5AC83C82A5F5FDEB /* libPods-gymScanner.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EB394B586AB81EF40D2131AF /* libPods-gymScanner.a */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
-		D6A5A38F69AA3EAE10FDDD8F /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3033205BCEAC187733C0B235 /* ExpoModulesProvider.swift */; };
-		DE2797ABD301703A0030E734 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = E11FDF2524ADB0205C5A8F50 /* PrivacyInfo.xcprivacy */; };
+		CF3BBE8C814387DD001D99A8 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = D88CC1D9736D82C426E3A477 /* PrivacyInfo.xcprivacy */; };
+		E6872743ED364C27B90CA35B /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86EF72D817D7C511F1DB0D4F /* ExpoModulesProvider.swift */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
-		F2E29DCD875578D8629EF6D5 /* libPods-gymScanner.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 31898EB1751FF65C1FC53882 /* libPods-gymScanner.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		13B07F961A680F5B00A75B9A /* gymScanner.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = gymScanner.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = gymScanner/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = gymScanner/Info.plist; sourceTree = "<group>"; };
-		3033205BCEAC187733C0B235 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-gymScanner/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
-		31898EB1751FF65C1FC53882 /* libPods-gymScanner.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-gymScanner.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		9350FA8D946E1BD2E84A66BC /* Pods-gymScanner.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-gymScanner.release.xcconfig"; path = "Target Support Files/Pods-gymScanner/Pods-gymScanner.release.xcconfig"; sourceTree = "<group>"; };
+		26F85D011AA7050484D3F5C8 /* Pods-gymScanner.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-gymScanner.debug.xcconfig"; path = "Target Support Files/Pods-gymScanner/Pods-gymScanner.debug.xcconfig"; sourceTree = "<group>"; };
+		63F1209D78516E4625744348 /* Pods-gymScanner.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-gymScanner.release.xcconfig"; path = "Target Support Files/Pods-gymScanner/Pods-gymScanner.release.xcconfig"; sourceTree = "<group>"; };
+		86EF72D817D7C511F1DB0D4F /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-gymScanner/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = gymScanner/SplashScreen.storyboard; sourceTree = "<group>"; };
-		B6C019D11E51EA0CFE94D2D5 /* Pods-gymScanner.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-gymScanner.debug.xcconfig"; path = "Target Support Files/Pods-gymScanner/Pods-gymScanner.debug.xcconfig"; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
-		E11FDF2524ADB0205C5A8F50 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = gymScanner/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		D88CC1D9736D82C426E3A477 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = gymScanner/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		EB394B586AB81EF40D2131AF /* libPods-gymScanner.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-gymScanner.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = gymScanner/AppDelegate.swift; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* gymScanner-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "gymScanner-Bridging-Header.h"; path = "gymScanner/gymScanner-Bridging-Header.h"; sourceTree = "<group>"; };
@@ -37,13 +37,21 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F2E29DCD875578D8629EF6D5 /* libPods-gymScanner.a in Frameworks */,
+				364BA32E5AC83C82A5F5FDEB /* libPods-gymScanner.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		002BB2D0095E5D540D5DE2E0 /* gymScanner */ = {
+			isa = PBXGroup;
+			children = (
+				86EF72D817D7C511F1DB0D4F /* ExpoModulesProvider.swift */,
+			);
+			name = gymScanner;
+			sourceTree = "<group>";
+		};
 		13B07FAE1A68108700A75B9A /* gymScanner */ = {
 			isa = PBXGroup;
 			children = (
@@ -53,7 +61,7 @@
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
-				E11FDF2524ADB0205C5A8F50 /* PrivacyInfo.xcprivacy */,
+				D88CC1D9736D82C426E3A477 /* PrivacyInfo.xcprivacy */,
 			);
 			name = gymScanner;
 			sourceTree = "<group>";
@@ -62,34 +70,27 @@
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				31898EB1751FF65C1FC53882 /* libPods-gymScanner.a */,
+				EB394B586AB81EF40D2131AF /* libPods-gymScanner.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		43F5F8A8C0DA133098BE07E3 /* gymScanner */ = {
+		4BF1BA2649C1F762F6EEDF38 /* ExpoModulesProviders */ = {
 			isa = PBXGroup;
 			children = (
-				3033205BCEAC187733C0B235 /* ExpoModulesProvider.swift */,
-			);
-			name = gymScanner;
-			sourceTree = "<group>";
-		};
-		6589486BF4DC41456C0E7E3E /* Pods */ = {
-			isa = PBXGroup;
-			children = (
-				B6C019D11E51EA0CFE94D2D5 /* Pods-gymScanner.debug.xcconfig */,
-				9350FA8D946E1BD2E84A66BC /* Pods-gymScanner.release.xcconfig */,
-			);
-			path = Pods;
-			sourceTree = "<group>";
-		};
-		7A8D33992EA673F5E44472AF /* ExpoModulesProviders */ = {
-			isa = PBXGroup;
-			children = (
-				43F5F8A8C0DA133098BE07E3 /* gymScanner */,
+				002BB2D0095E5D540D5DE2E0 /* gymScanner */,
 			);
 			name = ExpoModulesProviders;
+			sourceTree = "<group>";
+		};
+		656A46C59CE22597A62C364D /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				26F85D011AA7050484D3F5C8 /* Pods-gymScanner.debug.xcconfig */,
+				63F1209D78516E4625744348 /* Pods-gymScanner.release.xcconfig */,
+			);
+			name = Pods;
+			path = Pods;
 			sourceTree = "<group>";
 		};
 		832341AE1AAA6A7D00B99B32 /* Libraries */ = {
@@ -106,8 +107,8 @@
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
-				6589486BF4DC41456C0E7E3E /* Pods */,
-				7A8D33992EA673F5E44472AF /* ExpoModulesProviders */,
+				656A46C59CE22597A62C364D /* Pods */,
+				4BF1BA2649C1F762F6EEDF38 /* ExpoModulesProviders */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -139,13 +140,13 @@
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "gymScanner" */;
 			buildPhases = (
 				08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */,
-				BBB508F5B2FCC064FED4559F /* [Expo] Configure project */,
+				D1EBD9E5D2908F008733700A /* [Expo] Configure project */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */,
-				BEA23CA4576508A2D1DFE69E /* [CP] Embed Pods Frameworks */,
+				29D8FB4450F5B26E72FDDD80 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -165,7 +166,9 @@
 				LastUpgradeCheck = 1130;
 				TargetAttributes = {
 					13B07F861A680F5B00A75B9A = {
+						DevelopmentTeam = S9LCLJ48PL;
 						LastSwiftMigration = 1250;
+						ProvisioningStyle = Automatic;
 					};
 				};
 			};
@@ -195,7 +198,7 @@
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
-				DE2797ABD301703A0030E734 /* PrivacyInfo.xcprivacy in Resources */,
+				CF3BBE8C814387DD001D99A8 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -241,6 +244,28 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
+		29D8FB4450F5B26E72FDDD80 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-gymScanner/Pods-gymScanner-frameworks.sh",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/React-Core-prebuilt/React.framework/React",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/ReactNativeDependencies/ReactNativeDependencies.framework/ReactNativeDependencies",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputPaths = (
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/React.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ReactNativeDependencies.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-gymScanner/Pods-gymScanner-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
 		800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -277,7 +302,7 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-gymScanner/Pods-gymScanner-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		BBB508F5B2FCC064FED4559F /* [Expo] Configure project */ = {
+		D1EBD9E5D2908F008733700A /* [Expo] Configure project */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
@@ -288,6 +313,7 @@
 			inputPaths = (
 				"$(SRCROOT)/.xcode.env",
 				"$(SRCROOT)/.xcode.env.local",
+				"$(SRCROOT)/gymScanner/gymScanner.entitlements",
 				"$(SRCROOT)/Pods/Target Support Files/Pods-gymScanner/expo-configure-project.sh",
 			);
 			name = "[Expo] Configure project";
@@ -300,28 +326,6 @@
 			shellPath = /bin/sh;
 			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-gymScanner/expo-configure-project.sh\"\n";
 		};
-		BEA23CA4576508A2D1DFE69E /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-gymScanner/Pods-gymScanner-frameworks.sh",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/React-Core-prebuilt/React.framework/React",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/ReactNativeDependencies/ReactNativeDependencies.framework/ReactNativeDependencies",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputPaths = (
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/React.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ReactNativeDependencies.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-gymScanner/Pods-gymScanner-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -330,7 +334,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
-				D6A5A38F69AA3EAE10FDDD8F /* ExpoModulesProvider.swift in Sources */,
+				E6872743ED364C27B90CA35B /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -339,10 +343,13 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = B6C019D11E51EA0CFE94D2D5 /* Pods-gymScanner.debug.xcconfig */;
+			baseConfigurationReference = 26F85D011AA7050484D3F5C8 /* Pods-gymScanner.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = gymScanner/gymScanner.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = S9LCLJ48PL;
 				ENABLE_BITCODE = NO;
@@ -363,21 +370,25 @@
 					"-lc++",
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
-				PRODUCT_BUNDLE_IDENTIFIER = org.name.gymScanner;
+				PRODUCT_BUNDLE_IDENTIFIER = com.gymscanner;
 				PRODUCT_NAME = gymScanner;
 				SWIFT_OBJC_BRIDGING_HEADER = "gymScanner/gymScanner-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
 				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Debug;
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 9350FA8D946E1BD2E84A66BC /* Pods-gymScanner.release.xcconfig */;
+			baseConfigurationReference = 63F1209D78516E4625744348 /* Pods-gymScanner.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = gymScanner/gymScanner.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = S9LCLJ48PL;
 				INFOPLIST_FILE = gymScanner/Info.plist;
@@ -393,10 +404,11 @@
 					"-lc++",
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
-				PRODUCT_BUNDLE_IDENTIFIER = org.name.gymScanner;
+				PRODUCT_BUNDLE_IDENTIFIER = com.gymscanner;
 				PRODUCT_NAME = gymScanner;
 				SWIFT_OBJC_BRIDGING_HEADER = "gymScanner/gymScanner-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
 				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Release;

@@ -5,12 +5,16 @@ import { useCameraPermission, useCameraDevice, Camera } from 'react-native-visio
 import { Image } from 'expo-image';
 import { useState, useRef } from 'react';
 import { loadTensorflowModel, useTensorflowModel } from 'react-native-fast-tflite';
+import * as ImageManipulator from 'expo-image-manipulator';
+import * as FileSystem from 'expo-file-system';
+
 
 export function Scanner() {
-    const device = useCameraDevice('back');
+    const [facing, setFacing] = useState<'front' | 'back'>('back');
+    const device = useCameraDevice(facing);
     const { hasPermission, requestPermission } = useCameraPermission();
-    const ref = useRef<CameraView>(null);
-    const [uri, setUri] = useState<string | null>(null);
+    const camera = useRef<Camera>(null);
+    const [photoUri, setPhotoUri] = useState<string | null>(null);
     const [ready, setReady] = useState<boolean>(false);
     const plugin = useTensorflowModel(require('/Users/srirams/Developer/gymScanner/gymScanner/src/assets/model.tflite'))
     const model = plugin.state === 'loaded' ? plugin.model : undefined
@@ -30,29 +34,40 @@ export function Scanner() {
         return <View />
     }
 
-    /*
+    
     function toggleCameraDirection() {
         setFacing(current => (current === 'back' ? 'front' : 'back'));
     }
     
-    */
+    
     const takePicture = async () => {
-        if (!ready || !ref.current) return;
+        if (!ready || !camera.current) return;
 
-        try { 
-            const photo = await ref.current?.takePictureAsync({
-                quality: 0.5,
-                skipProcessing: true,
-            });
-            if (photo?.uri) setUri(photo.uri);
+        try {
+            console.log("Click")
+            const photo = await camera.current.takePhoto();
+            setPhotoUri(`file://${photo.path}`);
+
         } catch (e) {
-            console.warn("pic capture failed: ", e);
+            console.warn("Capture failed!", e);
         }
     }
 
     const uploadPhoto = async (uri: string) => {
         // post request to backend server
         console.log("Button Clicked!");
+
+        try {
+            const result = await ImageManipulator.manipulateAsync(
+                uri,
+                [{ resize: { width: 224, height: 224 } }],
+                { compress: 1, format: ImageManipulator.SaveFormat.JPEG }
+            );
+            console.log("Resized img!", result.uri)
+        } catch (e) {
+            console.warn("Image manipulation failed:", e);
+        }
+        
         
     }
 
@@ -62,7 +77,7 @@ export function Scanner() {
             <View style={styles.previewContainer}>
                 <Image source={{uri}} style={styles.previewImage} contentFit='contain'/>
                 <View style={styles.buttonContainer}>
-                    <TouchableOpacity style={styles.button} onPress={() => setUri(null)}>
+                    <TouchableOpacity style={styles.button} onPress={() => setPhotoUri(null)}>
                         <Text style={styles.text}>Take Another Picture?</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.button} onPress={() => uploadPhoto(uri)}>
@@ -75,11 +90,25 @@ export function Scanner() {
 
     const renderCamera = () => {
         return (
-            <Camera 
+            <View style={styles.container}>
+                <Camera 
                 style={StyleSheet.absoluteFill}
                 device={device}
                 isActive={true}
-            />
+                ref={camera}
+                photo={true}
+                onInitialized={() => setReady(true)}
+                />
+                <View style={styles.buttonContainer}>
+                    <TouchableOpacity style={styles.button} onPress={toggleCameraDirection}>
+                        <Text style={styles.text}>Flip Camera</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.button} onPress={takePicture}>
+                        <Text style={styles.text}>Take Photo</Text>
+                    </TouchableOpacity>
+                </View>
+
+            </View>
         )
 
         /*
@@ -101,7 +130,7 @@ export function Scanner() {
 
     return (
        <View style={styles.biggerContainer}>
-        {uri ? renderPicture(uri): renderCamera() }
+        {photoUri ? renderPicture(photoUri): renderCamera() }
        </View>
     )
 }
