@@ -1,11 +1,13 @@
 # generation of the tensorflow model, to get exported to .tflite for use within react-native
 import os
+os.environ["TF_USE_LEGACY_KERAS"] = "1"
 import tensorflow as tf 
 import numpy as np 
 import pathlib as pathlib
 import collections as collections
 import matplotlib.pyplot as plt 
 import kagglehub
+import json
 from tensorflow.keras.applications.mobilenet_v3 import preprocess_input
 
 # for now, will test with dogs and cat basic dataset. moving on to bench presses afterwards.
@@ -221,3 +223,25 @@ print("Prediction (class name):", class_names[predicted_class])
 
 #plt.show()
 '''
+
+'''
+# exporting model -> tflite. FP16 on device, no data required.
+keras_model = model
+converter = tf.lite.TFLiteConverter.from_keras_model(keras_model)
+converter.optimizations = [tf.lite.Optimize.DEFAULT]
+converter.target_spec.supported_types = [tf.float16]
+tflite_fp16 = converter.convert()
+open("gymScannerModel_fp16.tflite", "wb").write(tflite_fp16)
+
+# class names export
+with open("class_names.json", "w") as f:
+    json.dump(class_names, f)
+    '''
+
+
+# convert the model
+converter = tf.lite.TFLiteConverter.from_keras_model(model)
+tflite_model = converter.convert()
+
+with open('model.tflite', 'wb') as f:
+  f.write(tflite_model) 
