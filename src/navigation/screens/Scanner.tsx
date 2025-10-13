@@ -1,5 +1,4 @@
-import { Button, Text } from '@react-navigation/elements';
-import { StyleSheet, View, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, Text, Pressable } from 'react-native';
 import { CameraView, CameraType, useCameraPermissions, CameraMode } from 'expo-camera';
 import { useCameraPermission, useCameraDevice, Camera } from 'react-native-vision-camera';
 import { Image } from 'expo-image';
@@ -17,7 +16,7 @@ export function Scanner() {
     const camera = useRef<Camera>(null);
     const [photoUri, setPhotoUri] = useState<string | null>(null);
     const [ready, setReady] = useState<boolean>(false);
-    const plugin = useTensorflowModel(require('/Users/srirams/Developer/gymScanner/gymScanner/src/assets/model.tflite'))
+    const plugin = useTensorflowModel(require('../../assets/model.tflite'))
     const model = plugin.state === 'loaded' ? plugin.model : undefined
 
 
@@ -26,7 +25,7 @@ export function Scanner() {
         return (
             <View style={styles.permissionsPage}>
                 <Text>Please grant permission for camera access.</Text>
-                <Button onPress={requestPermission}>Grant Camera Access.</Button> 
+                <Pressable onPress={requestPermission}>Grant Camera Access.</Pressable> 
             </View>
         )
     }
@@ -41,6 +40,7 @@ export function Scanner() {
     }
 
     // manual function for base64 (NO LIBRARIES WORKING !!!)
+    /*
     function base64ToBytes(base64: string): Uint8Array {
         const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
         let str = base64.replace(/[\r\n=]/g, '');
@@ -60,6 +60,7 @@ export function Scanner() {
         return new Uint8Array(bytes);
     }
     
+    */
     
     const takePicture = async () => {
         if (!ready || !camera.current) return;
