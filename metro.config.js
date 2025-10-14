@@ -1,16 +1,11 @@
-// Learn more https://docs.expo.io/guides/customizing-metro
+// Learn more https://docs.expo.dev/guides/customizing-metro
 const { getDefaultConfig } = require('expo/metro-config');
 const { withNativeWind } = require('nativewind/metro');
 
-/** @type {import('expo/metro-config').MetroConfig} */
 const config = getDefaultConfig(__dirname);
 
-config.resolver.assetExts = Array.from(
-    new Set([...(config.resolver.assetExts || []), 'tflite'])
-);
+config.resolver.assetExts = [...config.resolver.assetExts, 'tflite'];
 
-config.resolver.sourceExts = (config.resolver.sourceExts || []).filter(
-    (ext) => ext !== 'tflite'
-);
+config.resolver.sourceExts = config.resolver.sourceExts.filter(ext => ext !== 'tflite');
 
-module.exports = withNativeWind(config, { input: './global.css'})
+module.exports = withNativeWind(config, { input: './global.css' });
