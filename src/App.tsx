@@ -8,6 +8,8 @@ import { useColorScheme } from 'react-native';
 import { Navigation } from './navigation';
 import "../global.css"
 
+import { loadTensorflowModel, useTensorflowModel } from 'react-native-fast-tflite';
+
 Asset.loadAsync([
   ...NavigationAssets,
   require('./assets/home.png'),
