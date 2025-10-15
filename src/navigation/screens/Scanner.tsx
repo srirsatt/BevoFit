@@ -16,7 +16,7 @@ export function Scanner() {
     const camera = useRef<Camera>(null);
     const [photoUri, setPhotoUri] = useState<string | null>(null);
     const [ready, setReady] = useState<boolean>(false);
-    const plugin = useTensorflowModel(require('model.tflite'));
+    const plugin = useTensorflowModel(require('../../assets/model.tflite'));
     const model = plugin.state === 'loaded' ? plugin.model : undefined
 
 
