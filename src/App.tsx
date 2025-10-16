@@ -8,7 +8,7 @@ import { useColorScheme } from 'react-native';
 import { Navigation } from './navigation';
 import "../global.css"
 
-import { ModelProvider, useTFLiteModel } from './providers/ModelProvider';
+import { loadTensorflowModel, useTensorflowModel } from 'react-native-fast-tflite';
 
 Asset.loadAsync([
   ...NavigationAssets,
@@ -18,56 +18,23 @@ Asset.loadAsync([
 
 SplashScreen.preventAutoHideAsync();
 
-// TFLITE -> model context
-
-
 const prefix = createURL('/');
 
-function AppInner() {
-    const colorScheme = useColorScheme();
-    const theme = colorScheme === 'dark' ? DarkTheme : DefaultTheme
+export function App() {
+  const colorScheme = useColorScheme();
 
-    const [navReady, setNavReady] = React.useState(false);
-    const { ready: modelReady } = useTFLiteModel();
+  const theme = colorScheme === 'dark' ? DarkTheme : DefaultTheme
 
-    React.useEffect(() => {
-      if (navReady && modelReady) {
-        SplashScreen.hideAsync().catch(() => {});
-      }
-    }, [navReady, modelReady]);
-
-    return (
-      /*
-      <Navigation
-        theme={theme}
-        linking={{
-          enabled: 'auto',
-          prefixes: [prefix],
-        }}
-        onReady={() => {
-          SplashScreen.hideAsync();
-        }}
-      />
-      */
-
-      <Navigation 
-        theme={theme}
-        linking={{
-          enabled: 'auto',
-          prefixes: [prefix],
-        }}      
-        onReady={() => {
-          setNavReady(true)
-        }}
-      />
-  );
-}
-
-export default function App() {
   return (
-    <ModelProvider>
-      <Navigation />
-    </ModelProvider>
+    <Navigation
+      theme={theme}
+      linking={{
+        enabled: 'auto',
+        prefixes: [prefix],
+      }}
+      onReady={() => {
+        SplashScreen.hideAsync();
+      }}
+    />
   );
 }
-

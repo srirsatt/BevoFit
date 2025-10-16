@@ -1,4 +1,5 @@
-import { StyleSheet, View, TouchableOpacity, Text, Button } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, Text, Pressable } from 'react-native';
+import { CameraView, CameraType, useCameraPermissions, CameraMode } from 'expo-camera';
 import { useCameraPermission, useCameraDevice, Camera } from 'react-native-vision-camera';
 import { Image } from 'expo-image';
 import { useState, useRef } from 'react';
@@ -6,7 +7,6 @@ import { loadTensorflowModel, useTensorflowModel } from 'react-native-fast-tflit
 import * as ImageManipulator from 'expo-image-manipulator';
 import { File } from 'expo-file-system';
 import { decode as decodeJpeg } from 'jpeg-js';
-import { useTFLiteModel } from '../../providers/ModelProvider';
 
 
 export function Scanner() {
@@ -16,7 +16,8 @@ export function Scanner() {
     const camera = useRef<Camera>(null);
     const [photoUri, setPhotoUri] = useState<string | null>(null);
     const [ready, setReady] = useState<boolean>(false);
-    const { model, ready: modelReady } = useTFLiteModel();
+    const plugin = useTensorflowModel(require('../../assets/model.tflite'));
+    const model = plugin.state === 'loaded' ? plugin.model : undefined
 
 
     if (!hasPermission) {
@@ -24,7 +25,7 @@ export function Scanner() {
         return (
             <View style={styles.permissionsPage}>
                 <Text>Please grant permission for camera access.</Text>
-                <Button title="Grant Camera Access." onPress={requestPermission} />
+                <Pressable onPress={requestPermission}>Grant Camera Access.</Pressable> 
             </View>
         )
     }
@@ -78,7 +79,7 @@ export function Scanner() {
         // post request to backend server
         console.log("Button Clicked!");
 
-        if (!model || !modelReady) {
+        if (!model) {
             console.warn("Model wasn't loaded!");
             return;
         }
