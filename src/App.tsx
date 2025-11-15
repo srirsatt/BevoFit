@@ -13,8 +13,6 @@ import { useTensorflowModel, loadTensorflowModelOnce } from './providers/ModelPr
 
 Asset.loadAsync([
   ...NavigationAssets,
-  require('./assets/home.png'),
-  require('./assets/scanner.png'),
 ]);
 
 SplashScreen.preventAutoHideAsync();

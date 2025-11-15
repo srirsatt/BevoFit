@@ -1,15 +1,16 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { HeaderButton, Text } from '@react-navigation/elements';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   createStaticNavigation,
   StaticParamList,
 } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Image } from 'react-native';
-import home from '../assets/home.png';
 import scanner from '../assets/scanner.png';
 import { Home } from './screens/Home';
 import { Scanner } from './screens/Scanner';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 const HomeTabs = createBottomTabNavigator({
 
@@ -19,32 +20,18 @@ const HomeTabs = createBottomTabNavigator({
       options: {
         title: 'Home',
         headerShown: false,
-        tabBarIcon: ({ color, size }) => (
-          <Image
-            source={home}
-            tintColor={color}
-            style={{
-              width: size,
-              height: size,
-            }}
-          />
-        ),
+        tabBarIcon: ({ color, size }) => {
+          return <Ionicons name="home-outline" size={size} color={color} />
+        },
       },
     },
     Scanner: {
       screen: Scanner,
       options: {
         headerShown: false,
-        tabBarIcon: ({ color, size }) => (
-          <Image
-            source={scanner}
-            tintColor={color}
-            style={{
-              width: size,
-              height: size,
-            }}
-          />
-        ),
+        tabBarIcon: ({ color, size }) => {
+          return <Ionicons name="camera-outline" size={size} color={color} />
+        },
       },
     },
   },

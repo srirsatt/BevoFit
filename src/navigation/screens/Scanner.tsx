@@ -1,8 +1,12 @@
-import { StyleSheet, View, TouchableOpacity, Text, Pressable } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, Text, Pressable, StatusBar, useWindowDimensions } from 'react-native';
 import { useCameraPermission, useCameraDevice, Camera } from 'react-native-vision-camera';
+import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler'; 
+import { runOnJS } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { useTensorflowModel } from '../../providers/ModelProvider';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing } from 'react-native-reanimated';
 // Local alias for TypedArray since the library doesn't export a type
 type TypedArray =
   | Float32Array
@@ -19,13 +23,25 @@ import { decode as decodeJpeg } from 'jpeg-js';
 
 
 export function Scanner() {
-    const [facing, setFacing] = useState<'front' | 'back'>('back');
-    const device = useCameraDevice(facing);
+    //const [facing, setFacing] = useState<'front' | 'back'>('back');
+    const device = useCameraDevice('back', {
+        physicalDevices: [
+            'ultra-wide-angle-camera',
+            'wide-angle-camera',
+            'telephoto-camera'
+        ]
+    });
     const { hasPermission, requestPermission } = useCameraPermission();
     const camera = useRef<Camera>(null);
     const [photoUri, setPhotoUri] = useState<string | null>(null);
+    const [photoSize, setPhotoSize] = useState<{ width: number; height: number} | null>(null);
     const [ready, setReady] = useState<boolean>(false);
     const { model, status, error } = useTensorflowModel();
+    const insets = useSafeAreaInsets();
+    const focusDot = useRef<{x: Number, y: number} | null>(null);
+    const [showFocusDot, setShowFocusDot] = useState(false);
+
+
     if (status === 'loading') {
         return <View><Text>Model Loading ...</Text></View>;
     }
@@ -52,9 +68,12 @@ export function Scanner() {
     }
 
     
+    /*
     function toggleCameraDirection() {
         setFacing(current => (current === 'back' ? 'front' : 'back'));
     }
+
+    */
 
     // manual function for base64 (NO LIBRARIES WORKING !!!)
     /*
@@ -78,6 +97,11 @@ export function Scanner() {
     }
     
     */
+
+    type Point = {
+        x: number;
+        y: number;
+    };
     
     const takePicture = async () => {
         if (!ready || !camera.current) return;
@@ -86,11 +110,25 @@ export function Scanner() {
             console.log("Click")
             const photo = await camera.current.takePhoto();
             setPhotoUri(`file://${photo.path}`);
-
+            setPhotoSize({ width: photo.width, height: photo.height });
         } catch (e) {
             console.warn("Capture failed!", e);
         }
     }
+
+    const focus = useCallback((point: Point) => {
+        const c = camera.current;
+        if (c == null) return;
+        c.focus(point);
+    }, [])
+
+    const gesture = Gesture.Tap().onEnd(({x, y}) => {
+        runOnJS(focus)({x, y});
+    })
+
+
+
+    
 
     const uploadPhoto = async (uri: string) => {
         // post request to backend server
@@ -138,50 +176,180 @@ export function Scanner() {
         } catch (e) {
             console.warn("Image manipulation failed:", e);
         }
-
-
-        
-
     }
 
 
     const renderPicture = (uri: string) => {
         return (
             <View style={styles.previewContainer}>
-                <Image source={{uri}} style={styles.previewImage} contentFit='contain'/>
-                <View style={styles.buttonContainer}>
-                    <TouchableOpacity style={styles.button} onPress={() => setPhotoUri(null)}>
-                        <Text style={styles.text}>Take Another Picture?</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.button} onPress={() => uploadPhoto(uri)}>
-                        <Text style={styles.text}>Upload Photo?</Text>
-                    </TouchableOpacity>
-                </View>
+                <RenderStatusBar />
+                <Image 
+                    source={{uri}} 
+                    style={StyleSheet.absoluteFill} 
+                    contentFit='cover'
+                />
+
+                <Pressable
+                onPress={() => setPhotoUri(null)}
+                style={{
+                    position: 'absolute',
+                    top: insets.top + 8,
+                    left: 12,
+                    width: 44,
+                    height: 44,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                }}
+                >
+                    <Text style={{ fontSize: 34, color: 'white' }}>×</Text>
+                </Pressable>
+
+                <CaptureButton 
+                mode="preview"
+                onConfirm={() => uploadPhoto(uri)}
+                insetsBottom={insets.bottom}
+                />
             </View>
+        );
+    };
+
+    function RenderStatusBar() {
+        return (
+            <>
+                <View 
+                pointerEvents = "none"
+                style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: insets.top,
+                    backgroundColor: 'black',
+                    zIndex: 1000
+                }}
+                />
+                <StatusBar 
+                barStyle='light-content'
+                hidden={false}
+                />
+            </>
         )
     }
 
+
+    function CaptureButton({
+        mode,
+        onCapture,
+        onConfirm,
+        insetsBottom = 0,
+    }: {
+        mode: 'idle' | 'preview';
+        onCapture?: () => void;
+        onConfirm?: () => void;
+        insetsBottom?: number;
+    }) {
+        const scale = useSharedValue(1);
+
+        const style = useAnimatedStyle(() => ({
+            transform: [{scale: scale.value}],
+        }));
+
+        const pressIn = () => {
+            // Snappier press-in animation
+            scale.value = withTiming(0.9, {
+                duration: 80,
+                easing: Easing.out(Easing.quad),
+            });
+        };
+        const pressOut = () => {
+            // Quick release back to normal
+            scale.value = withTiming(1, {
+                duration: 100,
+                easing: Easing.out(Easing.quad),
+            });
+        };
+        const handlePress = () => {
+            if (mode === 'idle') onCapture?.();
+            else onConfirm?.();
+        };
+
+        return (
+            <Animated.View 
+            style = {[
+                {
+                    position: 'absolute',
+                    bottom: Math.max(insetsBottom, 12) + 8,
+                    alignSelf: 'center',
+                },
+                style,
+            ]}
+            >
+                <Pressable
+                    onPressIn={pressIn}
+                    onPressOut={pressOut}
+                    onPress={handlePress}
+                    style={{
+                        width: 72,
+                        height: 72,
+                        borderRadius: 36,
+                        backgroundColor: 'white',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                    }}
+                >
+                    {mode === 'idle' ? (
+                        <View
+                        style={{
+                            width: 60,
+                            height: 60,
+                            borderRadius: 30,
+                            backgroundColor: 'white',
+                        }}
+                        />
+                    ) : (
+                        <Text style={{fontSize: 28, fontWeight: 'bold', color: 'black'}}>✓</Text>
+                    )}
+                </Pressable>
+            </Animated.View>
+        );
+    }
+
+
     const renderCamera = () => {
         return (
+            <GestureHandlerRootView>
             <View style={styles.container}>
-                <Camera 
-                style={StyleSheet.absoluteFill}
-                device={device}
-                isActive={true}
-                ref={camera}
-                photo={true}
-                onInitialized={() => setReady(true)}
-                />
+                <RenderStatusBar />
+                    <GestureDetector gesture={gesture}>
+                        <Camera 
+                        style={StyleSheet.absoluteFill}
+                        device={device}
+                        isActive={true}
+                        ref={camera}
+                        photo={true}
+                        enableZoomGesture={true}
+                        zoom={device.neutralZoom}
+                        outputOrientation="preview"
+                        onInitialized={() => setReady(true)}
+                        />
+                    </GestureDetector>
+                {/*
                 <View style={styles.buttonContainer}>
-                    <TouchableOpacity style={styles.button} onPress={toggleCameraDirection}>
-                        <Text style={styles.text}>Flip Camera</Text>
-                    </TouchableOpacity>
                     <TouchableOpacity style={styles.button} onPress={takePicture}>
                         <Text style={styles.text}>Take Photo</Text>
                     </TouchableOpacity>
                 </View>
+                */}
+
+                <CaptureButton 
+                mode="idle"
+                onCapture={takePicture}
+                insetsBottom={insets.bottom}
+                />
 
             </View>
+
+            </GestureHandlerRootView>
         )
 
         /*
@@ -249,7 +417,7 @@ const styles = StyleSheet.create({
   },
   previewContainer: {
     flex: 1,
-    backgroundColor: 'black'
+    backgroundColor: 'black',
   },
   previewImage: {
     width: '100%',
