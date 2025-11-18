@@ -10,15 +10,49 @@ import { useState } from 'react';
 import '../../../global.css';
 import * as WebBrowser from 'expo-web-browser';
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { useNavigation } from '@react-navigation/native';
+import { createClient } from '@supabase/supabase-js';
+
+const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
+const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON;
 
 // Removed overlaying status bar shim; we will use safe area padding instead.
+// file wide supabase declaration
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+export async function getFacilities() {
+  const { data, error } = await supabase
+    .from('facilities')
+    .select('name')
+    .order('name', { ascending: true });
+
+  if (error) throw error;
+  return data;
+}
+
+export async function getLatestHoursForFacility(facilityId: string) {
+  const { data, error } = await supabase
+    .from('facility_hours')
+    .select('*')
+    .eq('facility_id', facilityId)
+    .order('scraped_at', { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data;
+}
 
 export function Home() {
   // Separate animated states so buttons don't sync
   const scaleCard = useSharedValue(1);
   const scaleFabLeft = useSharedValue(1);
   const scaleFabRight = useSharedValue(1);
+  const navigation = useNavigation();
   const [result, setResult] = useState<WebBrowser.WebBrowserResult | null>(null);
+
+  getFacilities().then(f => console.log(f)).catch(console.error);
+  getLatestHoursForFacility('9a4c77cc-a882-4b53-8022-bb3c914071fa').then(h => console.log(h)).catch(console.error);
 
   const rCardStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scaleCard.value }],
@@ -109,7 +143,7 @@ export function Home() {
           style={rFabRightStyle}
           onPressIn={pressInFabRight}
           onPressOut={pressOutFabRight}
-          onPress={_handleButtonPressAsync}
+          onPress={() => navigation.navigate("Scanner")}
         >
           <Ionicons name="barbell" size={36} color="white" />
         </AnimatedPressable>
