@@ -4,7 +4,7 @@ import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-g
 import { runOnJS } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { useTensorflowModel } from '../../providers/ModelProvider';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing } from 'react-native-reanimated';
 // Local alias for TypedArray since the library doesn't export a type
@@ -20,6 +20,12 @@ type TypedArray =
 import * as ImageManipulator from 'expo-image-manipulator';
 import { File } from 'expo-file-system';
 import { decode as decodeJpeg } from 'jpeg-js';
+
+
+type Point = {
+    x: number;
+    y: number;
+};
 
 
 export function Scanner() {
@@ -41,6 +47,23 @@ export function Scanner() {
     const focusDot = useRef<{x: Number, y: number} | null>(null);
     const [showFocusDot, setShowFocusDot] = useState(false);
 
+    // Ask for camera permission on first load
+    useEffect(() => {
+        if (!hasPermission) {
+            requestPermission();
+        }
+    }, [hasPermission, requestPermission]);
+
+    const focus = useCallback((point: Point) => {
+        const c = camera.current;
+        if (c == null) return;
+        c.focus(point);
+    }, [])
+
+    const gesture = Gesture.Tap().onEnd(({x, y}) => {
+        runOnJS(focus)({x, y});
+    })
+
 
     if (status === 'loading') {
         return <View><Text>Model Loading ...</Text></View>;
@@ -52,13 +75,14 @@ export function Scanner() {
         return <View><Text>Model not loaded yet ...</Text></View>;
     }
 
-
     if (!hasPermission) {
         // eventually replace this with an automatic screen, later move
         return (
             <View style={styles.permissionsPage}>
                 <Text>Please grant permission for camera access.</Text>
-                <Pressable onPress={requestPermission}>Grant Camera Access.</Pressable> 
+                <Pressable onPress={requestPermission} style={styles.permissionsButton}>
+                    <Text style={styles.permissionsButtonText}>Grant Camera Access</Text>
+                </Pressable> 
             </View>
         )
     }
@@ -97,11 +121,6 @@ export function Scanner() {
     }
     
     */
-
-    type Point = {
-        x: number;
-        y: number;
-    };
     
     const takePicture = async () => {
         if (!ready || !camera.current) return;
@@ -116,19 +135,7 @@ export function Scanner() {
         }
     }
 
-    const focus = useCallback((point: Point) => {
-        const c = camera.current;
-        if (c == null) return;
-        c.focus(point);
-    }, [])
-
-    const gesture = Gesture.Tap().onEnd(({x, y}) => {
-        runOnJS(focus)({x, y});
-    })
-
-
-
-    
+    // Keep hooks before any conditional return to avoid hook order changes
 
     const uploadPhoto = async (uri: string) => {
         // post request to backend server
@@ -422,5 +429,16 @@ const styles = StyleSheet.create({
   previewImage: {
     width: '100%',
     height: '100%',
-  }
+  },
+  permissionsButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 24,
+    backgroundColor: 'white',
+  },
+  permissionsButtonText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: 'black',
+  },
 });
