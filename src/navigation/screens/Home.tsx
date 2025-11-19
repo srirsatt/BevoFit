@@ -21,7 +21,6 @@ const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON;
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 
-
 export async function getFacilities() {
   const { data, error } = await supabase
     .from('facilities')
