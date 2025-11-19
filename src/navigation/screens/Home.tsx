@@ -6,12 +6,13 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import '../../../global.css';
 import * as WebBrowser from 'expo-web-browser';
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useNavigation } from '@react-navigation/native';
 import { createClient } from '@supabase/supabase-js';
+import * as Haptics from 'expo-haptics';
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON;
@@ -66,6 +67,27 @@ export async function getLatestHoursForAllFacilities() {
   return data;
 };
 
+type FacilityRow = {
+  id: string;
+  name: string;
+  slug: string;
+};
+
+type FacilityHoursRow = {
+  facility_id: string;
+  season_label: string | null;
+  mon_thu: string | null;
+  fri: string | null;
+  sat: string | null;
+  sun: string | null;
+  scraped_at: string;
+};
+
+// essentially a combination of both
+type FacilityWithHours = FacilityRow & {
+  hours?: FacilityHoursRow | null;
+};
+
 
 export function Home() {
   // Separate animated states so buttons don't sync
@@ -75,9 +97,53 @@ export function Home() {
   const navigation = useNavigation();
   const [result, setResult] = useState<WebBrowser.WebBrowserResult | null>(null);
 
+  const [gyms, setGyms] = useState<FacilityWithHours[]>([]);
+  const [gymsLoading, setGymsLoading] = useState(true);
+  const [gymsError, setGymsError] = useState<string | null>(null);
 
-  getFacilities().then(f => console.log(f)).catch(console.error);
-  getLatestHoursForFacility('9a4c77cc-a882-4b53-8022-bb3c914071fa').then(h => console.log(h)).catch(console.error);
+  // simple test
+  //getFacilities().then(f => console.log(f)).catch(console.error);
+  //getLatestHoursForFacility('9a4c77cc-a882-4b53-8022-bb3c914071fa').then(h => console.log(h)).catch(console.error);
+
+  useEffect(() => {
+    let isMounted = true;
+    
+    async function loadGyms() {
+      try {
+        // base cases for react states
+        setGymsLoading(true);
+        setGymsError(null);
+
+        // lets fetch each facility hours
+        const facilities = await getFacilitiesMinimal();
+        const gymsWithHours: FacilityWithHours[] = await Promise.all(
+          facilities.map(async (f: FacilityRow) => {
+            try {
+              const hours = await getLatestHoursForFacility(f.id);
+              return { ...f, hours };
+            } catch (error) {
+              console.error(`Error fetching hours for facility ${f.id}:`, error);
+              return { ...f, hours: null };
+            }
+          })
+        );
+
+        // update react states
+        if (isMounted) {
+          setGyms(gymsWithHours);
+        } 
+      } catch (e: any) {
+        console.error(e);
+      } finally {
+        if (isMounted) setGymsLoading(false);
+      }
+    }
+    loadGyms();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const rCardStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scaleCard.value }],
@@ -92,14 +158,6 @@ export function Home() {
   const _handleButtonPressAsync = async () => {
     let result = await WebBrowser.openBrowserAsync("https://secure.rs.utexas.edu/app/myrecsports/scan.php");
     setResult(result);
-  }
-
-  const pressInCard = () => {
-    scaleCard.value = withTiming(0.95, { duration: 80, easing: Easing.out(Easing.quad) });
-  }
-
-  const pressOutCard = () => {
-    scaleCard.value = withTiming(1, { duration: 100, easing: Easing.out(Easing.quad) });
   }
 
   const pressInFabLeft = () => {
@@ -118,6 +176,39 @@ export function Home() {
     scaleFabRight.value = withTiming(1, { duration: 100, easing: Easing.out(Easing.quad) });
   }
 
+  const Card = ({gym}: {gym: FacilityWithHours}) => {
+    const scale = useSharedValue(1);
+    const rStyle = useAnimatedStyle(() => ({
+      transform: [{ scale: scale.value }]
+    }));
+
+    const handlePressIn = () => {
+      scale.value = withTiming(0.95, { duration: 80, easing: Easing.out(Easing.quad) });
+    }
+
+    const handlePressOut = () => {
+      scale.value = withTiming(1, { duration: 100, easing: Easing.out(Easing.quad) });
+    }
+    return (
+      <AnimatedPressable
+        key={gym.id}
+        style={rStyle}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        className="w-full h-24 bg-[#111111] rounded-2xl border border-[#262626] px-4 mt-1 flex-row items-center justify-between mb-4"
+        onPress={() => console.log(gym.name + " gym pressed.")}
+      >
+        <View>
+          <Text className="text-white pb-1 text-xl font-bold">{gym.name}</Text>
+            <Text className="text-neutral-400 text-xs">
+              {gym.hours ? gym.hours.mon_thu : 'No hours available'}
+            </Text>
+          </View>
+        <Text className="text-[#2ECC71] text-4xl">▶</Text>
+      </AnimatedPressable>
+    );
+  }
+
   const insets = useSafeAreaInsets();
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}> 
@@ -134,22 +225,26 @@ export function Home() {
         className="flex-1 px-5 pb-8"
         contentContainerStyle={{ paddingBottom: 32 }}
       >
-        {/** AnimatedPressable to apply Reanimated scale style */}
-        <AnimatedPressable 
-          style={rCardStyle}
-          className="w-full h-20 bg-[#111111] rounded-2xl border border-[#262626] px-4 mt-4 flex-row items-center justify-between mb-4"
-          onPressIn={pressInCard}
-          onPressOut={pressOutCard}
-          onPress={_handleButtonPressAsync}
-        >
-          <Text className="text-[#BF5700] text-4xl">▶</Text>
-          <View>
-            <Text className="text-white pb-1 text-xl font-bold">Check-In QR Code</Text>
-            <Text className="text-neutral-400 text-xs">
-              Use this code to check into all UT RecSports facilities.
-            </Text>
-          </View>
-        </AnimatedPressable>
+
+        {/* Loading state for cards */}
+        {gymsLoading && (
+          <Text className="text-neutral-400 mt-2">Loading UT RecSports Facilities...</Text>
+        )}
+        {gymsError && (
+          <Text className="text-red-500 mt-2">Error loading facilities: {gymsError}</Text>
+        )}
+
+        {!gymsLoading && gyms.length > 0 && (
+          <Text className="text-neutral-500 text-xs uppercase tracking-[0.2em] mt-2 mb-2">
+            Gyms
+          </Text>
+        )}
+
+        {/* Card per gym loop */}
+
+        {gyms.map((gym) => (
+          <Card gym={gym} key={gym.id}/>
+        ))}
 
       </ScrollView>
 
