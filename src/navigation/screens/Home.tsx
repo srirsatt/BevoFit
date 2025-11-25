@@ -12,7 +12,6 @@ import * as WebBrowser from 'expo-web-browser';
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useNavigation } from '@react-navigation/native';
 import { createClient } from '@supabase/supabase-js';
-import * as Haptics from 'expo-haptics';
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON;
@@ -184,7 +183,6 @@ export function Home() {
 
     const handlePressIn = () => {
       scale.value = withTiming(0.95, { duration: 80, easing: Easing.out(Easing.quad) });
-      Haptics.selectionAsync();
     }
 
     const handlePressOut = () => {
