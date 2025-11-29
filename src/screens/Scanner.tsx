@@ -5,7 +5,7 @@ import { runOnJS } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { useTensorflowModel } from '../../providers/ModelProvider';
+import { useTensorflowModel } from '../providers/ModelProvider';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing } from 'react-native-reanimated';
 // Local alias for TypedArray since the library doesn't export a type
 type TypedArray =

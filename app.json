@@ -7,7 +7,7 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "scheme": "gymscanner",
+    "scheme": "BevoFit",
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.gymscanner",
@@ -45,7 +45,8 @@
           "cameraPermissionText": "$(PRODUCT_NAME) needs access to your Camera."
         }
       ],
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-router"
     ],
     "extra": {
       "eas": {
