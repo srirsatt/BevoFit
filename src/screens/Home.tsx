@@ -246,27 +246,6 @@ export function Home() {
         ))}
 
       </ScrollView>
-
-      <View className="absolute bottom-8 left-0 right-0 px-6 flex-row items-center justify-between">
-        <AnimatedPressable
-          className="w-20 h-20 rounded-full bg-[#BF5700] flex items-center justify-center relative"
-          style={rFabLeftStyle}
-          onPressIn={pressInFabLeft}
-          onPressOut={pressOutFabLeft}
-          onPress={_handleButtonPressAsync}
-        >
-          <Ionicons name="qr-code-outline" size={32} color="white" />
-        </AnimatedPressable>
-        <AnimatedPressable
-          className="w-20 h-20 rounded-full bg-[#BF5700] flex items-center justify-center"
-          style={rFabRightStyle}
-          onPressIn={pressInFabRight}
-          onPressOut={pressOutFabRight}
-          onPress={() => navigation.navigate("Scanner")}
-        >
-          <Ionicons name="barbell" size={36} color="white" />
-        </AnimatedPressable>
-      </View>
     </View>
   );
 }

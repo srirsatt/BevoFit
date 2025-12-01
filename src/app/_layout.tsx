@@ -40,14 +40,16 @@ export default function TabLayout() {
     return (
         <>
             <ModelPreloader />
-            <NativeTabs>
+            <NativeTabs
+              tintColor='#BF5700'
+            >
                 <NativeTabs.Trigger name="index">
                     <Label>Home</Label>
                     <Icon sf="house.fill" drawable="custom_android_drawable" />
                 </NativeTabs.Trigger>
                 <NativeTabs.Trigger name="scanner">
                     <Label>Camera</Label>
-                    <Icon sf="camera" drawable="custom_android_drawable" />
+                    <Icon sf="camera.fill" drawable="custom_android_drawable" />
                 </NativeTabs.Trigger>
             </NativeTabs>
         </>
