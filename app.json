@@ -7,7 +7,7 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "scheme": "BevoFit",
+    "scheme": "gymscanner",
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.gymscanner",
