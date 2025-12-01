@@ -51,6 +51,10 @@ export default function TabLayout() {
                     <Label>Camera</Label>
                     <Icon sf="camera.fill" drawable="custom_android_drawable" />
                 </NativeTabs.Trigger>
+                <NativeTabs.Trigger name="map">
+                  <Label>Map</Label>
+                  <Icon sf="map.fill" drawable="custom_android_drawable" />
+                </NativeTabs.Trigger>
             </NativeTabs>
         </>
     )
