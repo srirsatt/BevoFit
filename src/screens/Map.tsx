@@ -9,11 +9,16 @@ export function Map() {
             <MapView 
                 style={styles.map} 
                 initialRegion={{
-                    latitude: 30.284566,
-                    longitude: -97.735673,
-                    latitudeDelta: 0.0125,
-                    longitudeDelta: 0.0125,
+                    latitude: 30.286465125666073,
+                    longitude: -97.73765808557216,
+                    latitudeDelta: 0.013753447601704494,
+                    longitudeDelta: 0.00881609046538756,
                 }}
+                onRegionChangeComplete ={(region) => {
+                    console.log("Centering", region.latitude, region.longitude);
+                    console.log("Zoom deltas", region.latitudeDelta, region.longitudeDelta);
+                }}
+                
             />
         </View>
     );
