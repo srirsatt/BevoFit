@@ -12,6 +12,7 @@ import * as WebBrowser from 'expo-web-browser';
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useNavigation } from '@react-navigation/native';
 import { createClient } from '@supabase/supabase-js';
+import {Icon} from 'expo-router/unstable-native-tabs';
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON;
@@ -208,6 +209,39 @@ export function Home() {
     );
   }
 
+  const ScanCard = () => {
+    const scale = useSharedValue(1);
+    const rStyle = useAnimatedStyle(() => ({
+      transform: [{ scale: scale.value }]
+    }));
+
+    const handlePressIn = () => {
+      scale.value = withTiming(0.95, { duration: 80, easing: Easing.out(Easing.quad) });
+    }
+
+    const handlePressOut = () => {
+      scale.value = withTiming(1, { duration: 100, easing: Easing.out(Easing.quad) });
+    }
+
+    return (
+      <AnimatedPressable
+        style={rStyle}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        className="w-full h-24 bg-[#BF5700] rounded-2xl border border-[#262626] px-5 mt-1 flex-row items-center justify-between mb-4"
+        onPress={_handleButtonPressAsync}
+      >
+        <View>
+          <Text className="text-white pb-1 text-2xl font-bold">Scan In</Text>
+        </View>
+        <Ionicons name="qr-code-outline" color="white" size={40} />
+      </AnimatedPressable>
+    );
+
+
+
+  }
+
   const insets = useSafeAreaInsets();
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}> 
@@ -220,9 +254,9 @@ export function Home() {
         </Text>
       </View>
 
+      { /* scan outside of scroll -> never mind */}
       <ScrollView 
         className="flex-1 px-5 pb-8"
-        contentContainerStyle={{ paddingBottom: 32 }}
       >
 
         {/* Loading state for cards */}
@@ -239,6 +273,7 @@ export function Home() {
           </Text>
         )}
 
+        <ScanCard />
         {/* Card per gym loop */}
 
         {gyms.map((gym) => (
