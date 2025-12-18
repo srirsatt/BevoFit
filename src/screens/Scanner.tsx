@@ -40,10 +40,13 @@ export function Scanner() {
     const { hasPermission, requestPermission } = useCameraPermission();
     const camera = useRef<Camera>(null);
     const [photoUri, setPhotoUri] = useState<string | null>(null);
+    const [facing, setFacing] = useState<'front' | 'back'>('back');
+    const [torchOn, setTorchOn]  = useState(false);
     const [photoSize, setPhotoSize] = useState<{ width: number; height: number} | null>(null);
     const [ready, setReady] = useState<boolean>(false);
     const { model, status, error } = useTensorflowModel();
     const insets = useSafeAreaInsets();
+    const tabBarBase = 67;
     const focusDot = useRef<{x: Number, y: number} | null>(null);
     const [showFocusDot, setShowFocusDot] = useState(false);
 
@@ -211,10 +214,11 @@ export function Scanner() {
                     <Text style={{ fontSize: 34, color: 'white' }}>×</Text>
                 </Pressable>
 
+
                 <CaptureButton 
-                mode="preview"
-                onConfirm={() => uploadPhoto(uri)}
-                insetsBottom={insets.bottom}
+                    mode="preview"
+                    onConfirm={() => uploadPhoto(uri)}
+                    insetsBottom={insets.bottom}
                 />
             </View>
         );
@@ -285,7 +289,7 @@ export function Scanner() {
             style = {[
                 {
                     position: 'absolute',
-                    bottom: Math.max(insetsBottom, 12) + 8,
+                    bottom: Math.max(insetsBottom, 12) + tabBarBase,
                     alignSelf: 'center',
                 },
                 style,
@@ -338,6 +342,7 @@ export function Scanner() {
                         zoom={device.neutralZoom}
                         outputOrientation="preview"
                         onInitialized={() => setReady(true)}
+                        torch={torchOn ? 'on' : 'off'}
                         />
                     </GestureDetector>
                 {/*
@@ -348,6 +353,7 @@ export function Scanner() {
                 </View>
                 */}
 
+                
                 <CaptureButton 
                 mode="idle"
                 onCapture={takePicture}

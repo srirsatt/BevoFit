@@ -9,10 +9,10 @@ export function Map() {
             <MapView 
                 style={styles.map} 
                 initialRegion={{
-                    latitude: 30.283623,
-                    longitude: -122.4324,
-                    latitudeDelta: 0.0922,
-                    longitudeDelta: 0.0421,
+                    latitude: 30.284566,
+                    longitude: -97.735673,
+                    latitudeDelta: 0.0125,
+                    longitudeDelta: 0.0125,
                 }}
             />
         </View>
