@@ -3,6 +3,21 @@ import MapView from 'react-native-maps';
 import { StyleSheet, View } from 'react-native';
 
 
+
+/*
+
+desired facilities:
+
+Bellmont Hall
+Caven-Clark Courts
+Caven-Clark Track/Turf 
+Gregory Gym
+Natatorium - Greg
+Recreational Sports Center
+Whitaker Sports Complex
+
+
+*/
 export function Map() {
     return (
         <View style={styles.container}>
