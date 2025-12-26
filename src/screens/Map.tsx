@@ -66,21 +66,19 @@ export function Map() {
             <MapView 
                 style={styles.map} 
                 initialRegion={{
-                    latitude: 30.28684350735148,
-                    longitude: -97.73702845323676,
-                    latitudeDelta: 0.01624097636879185,
-                    longitudeDelta: 0.0104106601780245,
+                    latitude: 30.284191170256957,
+                    longitude: -97.73406558584728,
+                    latitudeDelta: 0.009380758294785352,
+                    longitudeDelta: 0.006013015735092608,
                 }}
-            >
-                {
-                /*
                 onRegionChangeComplete ={(region) => {
                     console.log("Centering", region.latitude, region.longitude);
                     console.log("Zoom deltas", region.latitudeDelta, region.longitudeDelta);
                 }}
-                    was for debug -> finding good map coords
-                */
-                }
+            >
+                
+                
+            
                 {pins.map((f) => (
                     <Marker 
                         key={f.id}
