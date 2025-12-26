@@ -11,15 +11,10 @@ import '../../global.css'
 import * as WebBrowser from 'expo-web-browser';
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useNavigation } from '@react-navigation/native';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '../lib/supabase';
 import {Icon} from 'expo-router/unstable-native-tabs';
 
-const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
-const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON;
-
 // Removed overlaying status bar shim; we will use safe area padding instead.
-// file wide supabase declaration
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 
 export async function getFacilities() {
