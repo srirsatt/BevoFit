@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useTensorflowModel } from '../providers/ModelProvider';
+import * as Haptics from 'expo-haptics';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing } from 'react-native-reanimated';
 // Local alias for TypedArray since the library doesn't export a type
 type TypedArray =
@@ -200,7 +201,11 @@ export function Scanner() {
                 />
 
                 <Pressable
-                onPress={() => setPhotoUri(null)}
+                onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                    setPhotoUri(null)
+                
+                }}
                 style={{
                     position: 'absolute',
                     top: insets.top + 8,
@@ -280,6 +285,8 @@ export function Scanner() {
             });
         };
         const handlePress = () => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            
             if (mode === 'idle') onCapture?.();
             else onConfirm?.();
         };

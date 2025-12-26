@@ -13,6 +13,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { useNavigation } from '@react-navigation/native';
 import { supabase } from '../lib/supabase';
 import {Icon} from 'expo-router/unstable-native-tabs';
+import * as Haptics from 'expo-haptics';
 
 // Removed overlaying status bar shim; we will use safe area padding instead.
 
@@ -151,6 +152,8 @@ export function Home() {
   }));
 
   const _handleButtonPressAsync = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      
     let result = await WebBrowser.openBrowserAsync("https://secure.rs.utexas.edu/app/myrecsports/scan.php");
     setResult(result);
   }
@@ -191,7 +194,10 @@ export function Home() {
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
         className="w-full h-24 bg-[#111111] rounded-2xl border border-[#262626] px-4 mt-1 flex-row items-center justify-between mb-4"
-        onPress={() => console.log(gym.name + " gym pressed.")}
+        onPress={() => {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+          console.log(gym.name + " gym pressed.");
+        }}
       >
         <View>
           <Text className="text-white pb-1 text-xl font-bold">{gym.name}</Text>
