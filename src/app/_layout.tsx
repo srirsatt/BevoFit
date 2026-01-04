@@ -8,9 +8,11 @@ import React, { useEffect } from 'react';
 import { useColorScheme } from 'react-native';
 import "../../global.css"
 import { useTensorflowModel, loadTensorflowModelOnce } from '../providers/ModelProvider';
+import BottomSheet, { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 Asset.loadAsync([
-    ...NavigationAssets,
+  ...NavigationAssets,
 ]);
 
 SplashScreen.preventAutoHideAsync();
@@ -34,28 +36,30 @@ function ModelPreloader() {
 
 
 export default function TabLayout() {
-    const colorScheme = useColorScheme();
-    const theme = colorScheme === 'dark' ? DarkTheme : DefaultTheme
-    
-    return (
-        <>
-            <ModelPreloader />
-            <NativeTabs
-              tintColor='#BF5700'
-            >
-                <NativeTabs.Trigger name="index">
-                    <Label>Home</Label>
-                    <Icon sf="house.fill" drawable="custom_android_drawable" />
-                </NativeTabs.Trigger>
-                <NativeTabs.Trigger name="scanner">
-                    <Label>Camera</Label>
-                    <Icon sf="camera.fill" drawable="custom_android_drawable" />
-                </NativeTabs.Trigger>
-                <NativeTabs.Trigger name="map">
-                  <Label>Map</Label>
-                  <Icon sf="map.fill" drawable="custom_android_drawable" />
-                </NativeTabs.Trigger>
-            </NativeTabs>
-        </>
-    )
+  const colorScheme = useColorScheme();
+  const theme = colorScheme === 'dark' ? DarkTheme : DefaultTheme
+
+  return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <BottomSheetModalProvider>
+        <ModelPreloader />
+        <NativeTabs
+          tintColor='#BF5700'
+        >
+          <NativeTabs.Trigger name="index">
+            <Label>Home</Label>
+            <Icon sf="house.fill" drawable="custom_android_drawable" />
+          </NativeTabs.Trigger>
+          <NativeTabs.Trigger name="scanner">
+            <Label>Camera</Label>
+            <Icon sf="camera.fill" drawable="custom_android_drawable" />
+          </NativeTabs.Trigger>
+          <NativeTabs.Trigger name="map">
+            <Label>Map</Label>
+            <Icon sf="map.fill" drawable="custom_android_drawable" />
+          </NativeTabs.Trigger>
+        </NativeTabs>
+      </BottomSheetModalProvider>
+    </GestureHandlerRootView>
+  )
 }

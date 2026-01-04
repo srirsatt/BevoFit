@@ -6,14 +6,17 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo, ReactNode } from 'react';
 import '../../global.css'
 import * as WebBrowser from 'expo-web-browser';
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useNavigation } from '@react-navigation/native';
 import { supabase } from '../lib/supabase';
-import {Icon} from 'expo-router/unstable-native-tabs';
+import { Icon } from 'expo-router/unstable-native-tabs';
 import * as Haptics from 'expo-haptics';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { BottomSheetModal, BottomSheetView, BottomSheetModalProvider, BottomSheetScrollView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
+import { FullWindowOverlay } from 'react-native-screens';
 
 // Removed overlaying status bar shim; we will use safe area padding instead.
 
@@ -96,6 +99,17 @@ export function Home() {
   const [gyms, setGyms] = useState<FacilityWithHours[]>([]);
   const [gymsLoading, setGymsLoading] = useState(true);
   const [gymsError, setGymsError] = useState<string | null>(null);
+  const sheetRef = useRef<BottomSheetModal>(null);
+
+  const snapPoints = useMemo(() => ['80%'], []);
+
+  // callbacks for sheets
+  const handleModalPress = useCallback(() => {
+    sheetRef.current?.present();
+  }, []);
+  const handleSheetChanges = useCallback((index: number) => {
+    console.log('handle sheet changes', index);
+  }, []);
 
   // simple test
   //getFacilities().then(f => console.log(f)).catch(console.error);
@@ -103,7 +117,7 @@ export function Home() {
 
   useEffect(() => {
     let isMounted = true;
-    
+
     async function loadGyms() {
       try {
         // base cases for react states
@@ -127,7 +141,7 @@ export function Home() {
         // update react states
         if (isMounted) {
           setGyms(gymsWithHours);
-        } 
+        }
       } catch (e: any) {
         console.error(e);
       } finally {
@@ -153,7 +167,7 @@ export function Home() {
 
   const _handleButtonPressAsync = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      
+
     let result = await WebBrowser.openBrowserAsync("https://secure.rs.utexas.edu/app/myrecsports/scan.php");
     setResult(result);
   }
@@ -174,7 +188,7 @@ export function Home() {
     scaleFabRight.value = withTiming(1, { duration: 100, easing: Easing.out(Easing.quad) });
   }
 
-  const Card = ({gym}: {gym: FacilityWithHours}) => {
+  const Card = ({ gym }: { gym: FacilityWithHours }) => {
     const scale = useSharedValue(1);
     const rStyle = useAnimatedStyle(() => ({
       transform: [{ scale: scale.value }]
@@ -193,18 +207,19 @@ export function Home() {
         style={rStyle}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
-        className="w-full h-24 bg-[#111111] rounded-2xl border border-[#262626] px-4 mt-1 flex-row items-center justify-between mb-4"
+        className="w-full min-h-[80px] bg-[#111111] rounded-2xl border border-[#262626] px-4 mt-1 flex-row items-center justify-between mb-4"
         onPress={() => {
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
           console.log(gym.name + " gym pressed.");
+          handleModalPress();
         }}
       >
         <View>
           <Text className="text-white pb-1 text-xl font-bold">{gym.name}</Text>
-            <Text className="text-neutral-400 text-xs">
-              {gym.hours ? gym.hours.mon_thu : 'No hours available'}
-            </Text>
-          </View>
+          <Text className="text-neutral-400 text-xs">
+            {gym.hours ? gym.hours.mon_thu : 'No hours available'}
+          </Text>
+        </View>
         <Text className="text-[#2ECC71] text-4xl">▶</Text>
       </AnimatedPressable>
     );
@@ -243,20 +258,29 @@ export function Home() {
 
   }
 
+  const renderBackdrop = (props: any) => (
+    <BottomSheetBackdrop
+      {...props}
+      appearsOnIndex={0}
+      disappearsOnIndex={-1}
+      pressBehavior="close"
+    />
+  );
+
   const insets = useSafeAreaInsets();
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}> 
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <View className="w-full px-5 mt-4">
         <Text className="text-3xl font-lg ios:text-left leading-tight">
           <Text className="text-white">welcome to</Text>
         </Text>
-        <Text className="text-6xl font-extrabold ios:text-left leading-tight">
+        <Text className="sm:text-5xl text-6xl font-extrabold ios:text-left leading-tight">
           <Text className="text-[#BF5700]">BevoFit</Text>
         </Text>
       </View>
 
       { /* scan outside of scroll -> never mind */}
-      <ScrollView 
+      <ScrollView
         className="flex-1 px-5 pb-8"
       >
 
@@ -278,10 +302,38 @@ export function Home() {
         {/* Card per gym loop */}
 
         {gyms.map((gym) => (
-          <Card gym={gym} key={gym.id}/>
+          <Card gym={gym} key={gym.id} />
         ))}
 
+
+
       </ScrollView>
+      <FullWindowOverlay>
+        <BottomSheetModal
+          ref={sheetRef}
+          snapPoints={snapPoints}
+          onChange={handleSheetChanges}
+          enableDismissOnClose={true}
+          enableDynamicSizing={false}
+          backdropComponent={renderBackdrop}
+          backgroundStyle={{
+            backgroundColor: '#111111',
+            borderTopLeftRadius: 20,
+            borderTopRightRadius: 20,
+
+          }}
+          handleIndicatorStyle={{
+            backgroundColor: 'white',
+            width: '10%',
+            height: 5,
+          }}
+        >
+          <BottomSheetScrollView style={{ flex: 1 }}>
+            <Text>Hello WOrld!</Text>
+          </BottomSheetScrollView>
+
+        </BottomSheetModal>
+      </FullWindowOverlay>
     </View>
   );
 }
