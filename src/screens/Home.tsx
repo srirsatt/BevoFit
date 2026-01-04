@@ -1,4 +1,4 @@
-import { StyleSheet, View, Text, ScrollView, Pressable } from 'react-native';
+import { StyleSheet, View, Text, ScrollView, Pressable, Image } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -34,7 +34,7 @@ export async function getFacilities() {
 export async function getFacilitiesMinimal() {
   const { data, error } = await supabase
     .from('facilities')
-    .select('id, name, slug')
+    .select('id, name, slug, lat, lng, addr, facility_url, hero_image_path')
     .order('name', { ascending: true });
 
   if (error) throw error;
@@ -70,6 +70,11 @@ type FacilityRow = {
   id: string;
   name: string;
   slug: string;
+  lat: number;
+  lng: number;
+  addr: string;
+  facility_url: string;
+  hero_image_path: string;
 };
 
 type FacilityHoursRow = {
@@ -85,6 +90,7 @@ type FacilityHoursRow = {
 // essentially a combination of both
 type FacilityWithHours = FacilityRow & {
   hours?: FacilityHoursRow | null;
+  hero_image_url?: string | null;
 };
 
 
@@ -99,12 +105,16 @@ export function Home() {
   const [gyms, setGyms] = useState<FacilityWithHours[]>([]);
   const [gymsLoading, setGymsLoading] = useState(true);
   const [gymsError, setGymsError] = useState<string | null>(null);
+  const [selectedGym, setSelectedGym] = useState<FacilityWithHours | null>(null); // for use with selecting my gym card
   const sheetRef = useRef<BottomSheetModal>(null);
 
+  // essentially, each modal has access to a facilitywithhours state var
+  // this var should allow for every required supabase read, due to access to ID and SLUG as defined in the type
   const snapPoints = useMemo(() => ['80%'], []);
 
   // callbacks for sheets
-  const handleModalPress = useCallback(() => {
+  const handleModalPress = useCallback((gym: FacilityWithHours) => {
+    setSelectedGym(gym);
     sheetRef.current?.present();
   }, []);
   const handleSheetChanges = useCallback((index: number) => {
@@ -120,30 +130,47 @@ export function Home() {
 
     async function loadGyms() {
       try {
-        // base cases for react states
         setGymsLoading(true);
         setGymsError(null);
 
-        // lets fetch each facility hours
+        // 1. Fetch facility list (FAST)
         const facilities = await getFacilitiesMinimal();
+        console.log('Fetched facilities count:', facilities?.length);
+        if (facilities && facilities.length > 0) {
+          console.log('First facility sample:', JSON.stringify(facilities[0], null, 2));
+        }
+
         const gymsWithHours: FacilityWithHours[] = await Promise.all(
           facilities.map(async (f: FacilityRow) => {
+            let hours = null;
             try {
-              const hours = await getLatestHoursForFacility(f.id);
-              return { ...f, hours };
+              hours = await getLatestHoursForFacility(f.id);
             } catch (error) {
               console.error(`Error fetching hours for facility ${f.id}:`, error);
-              return { ...f, hours: null };
             }
+
+            // Always try to get image URL if path exists, regardless of hours status
+            const hero_image_url =
+              f.hero_image_path
+                ? supabase.storage
+                  .from('facility-imgs')
+                  .getPublicUrl(f.hero_image_path).data.publicUrl
+                : null;
+
+            if (f.hero_image_path) {
+              console.log(`Generated URL for ${f.name}:`, hero_image_url);
+            }
+
+            return { ...f, hours, hero_image_url };
           })
         );
 
-        // update react states
         if (isMounted) {
           setGyms(gymsWithHours);
         }
       } catch (e: any) {
-        console.error(e);
+        console.error('Error in loadGyms:', e);
+        if (isMounted) setGymsError(e.message);
       } finally {
         if (isMounted) setGymsLoading(false);
       }
@@ -211,7 +238,7 @@ export function Home() {
         onPress={() => {
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
           console.log(gym.name + " gym pressed.");
-          handleModalPress();
+          handleModalPress(gym);
         }}
       >
         <View>
@@ -320,7 +347,6 @@ export function Home() {
             backgroundColor: '#111111',
             borderTopLeftRadius: 20,
             borderTopRightRadius: 20,
-
           }}
           handleIndicatorStyle={{
             backgroundColor: 'white',
@@ -328,8 +354,12 @@ export function Home() {
             height: 5,
           }}
         >
-          <BottomSheetScrollView style={{ flex: 1 }}>
-            <Text>Hello WOrld!</Text>
+          <BottomSheetScrollView>
+            <View className="px-7 pt-3">
+              <Text className="text-white text-4xl font-bold">{selectedGym?.name}</Text>
+              <Image source={{ uri: selectedGym?.hero_image_url ?? undefined }} style={{ width: '100%', height: 220 }} />
+
+            </View>
           </BottomSheetScrollView>
 
         </BottomSheetModal>
