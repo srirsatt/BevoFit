@@ -10,7 +10,7 @@
     "scheme": "bevofit",
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.bevofit",
+      "bundleIdentifier": "com.sriram.bevofit",
       "infoPlist": {
         "NSCameraUsageDescription": "$(PRODUCT_NAME) needs access to your Camera.",
         "NSMicrophoneUsageDescription": "$(PRODUCT_NAME) needs access to your Microphone.",
@@ -22,7 +22,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.bevofit",
+      "package": "com.sriram.bevofit",
       "permissions": [
         "android.permission.CAMERA"
       ]
