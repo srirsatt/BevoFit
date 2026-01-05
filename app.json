@@ -1,16 +1,16 @@
 {
   "expo": {
-    "name": "gymScanner",
+    "name": "BevoFit",
     "slug": "gymScanner",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "scheme": "gymscanner",
+    "scheme": "bevofit",
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.gymscanner",
+      "bundleIdentifier": "com.bevofit",
       "infoPlist": {
         "NSCameraUsageDescription": "$(PRODUCT_NAME) needs access to your Camera.",
         "NSMicrophoneUsageDescription": "$(PRODUCT_NAME) needs access to your Microphone.",
@@ -22,7 +22,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.gymscanner",
+      "package": "com.bevofit",
       "permissions": [
         "android.permission.CAMERA"
       ]
@@ -53,6 +53,7 @@
       "eas": {
         "projectId": "9792995b-e864-4303-85f3-62d679471dcb"
       }
-    }
+    },
+    "owner": "nathos"
   }
 }
