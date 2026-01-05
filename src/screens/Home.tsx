@@ -1,4 +1,5 @@
-import { StyleSheet, View, Text, ScrollView, Pressable, Image } from 'react-native';
+import { StyleSheet, View, Text, ScrollView, Pressable } from 'react-native';
+import { Image } from 'expo-image';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -135,16 +136,12 @@ export function Home() {
 
         // 1. Fetch facility list (FAST)
         const facilities = await getFacilitiesMinimal();
-        console.log('Fetched facilities count:', facilities?.length);
-        if (facilities && facilities.length > 0) {
-          console.log('First facility sample:', JSON.stringify(facilities[0], null, 2));
-        }
 
         const gymsWithHours: FacilityWithHours[] = await Promise.all(
           facilities.map(async (f: FacilityRow) => {
             let hours = null;
             try {
-              hours = await getLatestHoursForFacility(f.id);
+              //hours = await getLatestHoursForFacility(f.id);
             } catch (error) {
               console.error(`Error fetching hours for facility ${f.id}:`, error);
             }
@@ -357,7 +354,7 @@ export function Home() {
           <BottomSheetScrollView>
             <View className="px-7 pt-3">
               <Text className="text-white text-4xl font-bold">{selectedGym?.name}</Text>
-              <Image source={{ uri: selectedGym?.hero_image_url ?? undefined }} style={{ width: '100%', height: 220 }} />
+              <Image source={selectedGym?.hero_image_url} style={{ width: '100%', height: 220 }} contentFit="cover" cachePolicy="disk" transition={150} />
 
             </View>
           </BottomSheetScrollView>
