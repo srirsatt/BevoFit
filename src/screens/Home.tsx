@@ -21,7 +21,24 @@ export async function getFacilitiesMinimal() {
   const { data, error } = await supabase
     .from('facilities')
     .select('id, name, slug, lat, lng, addr, facility_url, hero_image_path')
-    .order('name', { ascending: true });
+
+  if (error) throw error;
+  return data;
+}
+
+export async function getFacilityActivities() {
+  const { data, error } = await supabase
+    .from('facility_activities')
+    .select('facility_id, activity')
+
+  if (error) throw error;
+  return data;
+}
+
+export async function getFacilityFeatures() {
+  const { data, error } = await supabase
+    .from('facility_features)')
+    .select('facility_id, feature')
 
   if (error) throw error;
   return data;
@@ -39,6 +56,7 @@ export async function getLatestHoursForFacility(facilityId: string) {
   if (error) throw error;
   return data;
 }
+
 
 type FacilityRow = {
   id: string;
