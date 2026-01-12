@@ -20,7 +20,7 @@ import { FullWindowOverlay } from 'react-native-screens';
 export async function getFacilitiesMinimal() {
   const { data, error } = await supabase
     .from('facilities')
-    .select('id, name, slug, lat, lng, addr, facility_url, hero_image_path, facility_activities ( activity ), facility_features ( feature )')
+    .select('id, name, slug, lat, lng, addr, facility_url, hero_image_path, general_info, facility_activities ( activity ), facility_features ( feature )')
 
   if (error) throw error;
   return data;
@@ -67,6 +67,7 @@ type FacilityRow = {
   addr: string;
   facility_url: string;
   hero_image_path: string;
+  general_info: string;
   facility_features: string[];
   facility_activities: string[];
 };
@@ -229,7 +230,7 @@ export function Home() {
         >
           <BottomSheetScrollView>
             <View className="px-7 pt-3">
-              <View className="w-full h-[210px] rounded-2xl overflow-hidden bg-neutral-900 border border-[#262626] items-center justify-center">
+              <View className="w-full h-[220px] rounded-2xl overflow-hidden bg-neutral-900 border border-[#262626] items-center justify-center">
                 <Image
                   source={selectedGym?.hero_image_url}
                   style={{ width: '100%', height: '100%' }}
@@ -239,11 +240,37 @@ export function Home() {
               <ScrollView>
                 <Text className="text-white text-4xl mt-4 font-bold">{selectedGym?.name}</Text>
                 <View className="flex-row items-center mt-1">
-                  <Ionicons name="location-sharp" size={14} color="#9CAEAF" />
-                  <Text className="text-gray-400 text-sm">{selectedGym?.addr}</Text>
+                  <Ionicons name="time-outline" size={15} color="#BF5700" />
+                  <Text className="text-[#BF5700] text-lg font-bold"> Open</Text>
                 </View>
-                <View className="h-[1px] w-full bg-[#262626] mt-5"></View>
-                <Text className="text-white text-3xl mt-3">Activities at this Facility</Text>
+                <View className="flex-row items-center mt-1">
+                  <Ionicons name="location-sharp" size={14} color="#9CAEAF" />
+                  <Text className="text-gray-400 text-sm"> {selectedGym?.addr}</Text>
+                </View>
+                <View className="h-[1px] w-full bg-[#262626] mt-4"></View>
+                <Text className="text-white text-xl mt-3">{selectedGym?.general_info}</Text>
+                <View className="bg-[#262626] w-full h-[220px] rounded-2xl overflow-hidden mt-5">
+                  <Text className="text-white text-2xl font-bold pt-3 px-4">Regular Service Hours</Text>
+                  <View className="flex-row pt-4 px-5 justify-between">
+                    <Text className="text-white font-bold">M-TH: </Text>
+                    <Text className="text-white">11:00 AM - 11:00 PM</Text>
+                  </View>
+                  <View className="flex-row pt-8 px-5 justify-between">
+                    <Text className="text-white font-bold">Fri: </Text>
+                    <Text className="text-white">11:00 AM - 11:00 PM</Text>
+                  </View>
+                  <View className="flex-row pt-8 px-5 justify-between">
+                    <Text className="text-white font-bold">Sat: </Text>
+                    <Text className="text-white">11:00 AM - 11:00 PM</Text>
+                  </View>
+                  <View className="flex-row pt-8 px-5 justify-between">
+                    <Text className="text-white font-bold">Sun: </Text>
+                    <Text className="text-white">11:00 AM - 11:00 PM</Text>
+                  </View>
+
+                </View>
+
+                <Text className="text-white text-2xl mt-4 font-bold">Activities at this Facility</Text>
                 <View className="flex-row flex-wrap justify-between mt-2">
                   {selectedGym?.facility_activities?.map((item, index) => (
                     <View key={index} className="w-[48%] bg-[#1A1A1A] border border-[#262626] rounded-xl px-3 py-4 mb-3 items-center justify-center">
@@ -252,7 +279,7 @@ export function Home() {
                   ))}
                 </View>
 
-                <Text className="text-white text-3xl mt-3">Features</Text>
+                <Text className="text-white text-2xl font-bold mt-1">Features</Text>
                 <View className="flex-row flex-wrap justify-between mt-2">
                   {selectedGym?.facility_features?.map((item, index) => (
                     <View key={index} className="w-[48%] bg-[#1A1A1A] border border-[#262626] rounded-xl px-3 py-4 mb-3 items-center justify-center">
