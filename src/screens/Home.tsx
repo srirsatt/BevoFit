@@ -77,7 +77,7 @@ export function Home() {
 
   const sheetRef = useRef<BottomSheetModal>(null);
   const isPresentingRef = useRef(false);
-  const snapPoints = useMemo(() => ['80%'], []);
+  const snapPoints = useMemo(() => ['90%'], []);
 
   const handleModalPress = useCallback((gym: FacilityWithHours) => {
     if (isPresentingRef.current) return;
@@ -169,15 +169,14 @@ export function Home() {
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <View className="w-full px-5 mt-4">
         <Text className="text-white text-3xl">welcome to</Text>
-        <Text className="text-[#BF5700] text-6xl font-extrabold">BevoFit</Text>
+        <Text className="text-[#BF5700] text-6xl mt-2 font-extrabold">BevoFit</Text>
       </View>
 
       <ScrollView className="flex-1 px-5 pb-8">
-        {gymsLoading && <Text className="text-neutral-400 mt-2">Loading UT RecSports Facilities...</Text>}
-        {gymsError && <Text className="text-red-500 mt-2">Error: {gymsError}</Text>}
+        {gymsLoading && <Text className="text-neutral-500 text-xs uppercase mt-2 mb-2">Loading Facilities...</Text>}
 
         {!gymsLoading && gyms.length > 0 && (
-          <Text className="text-neutral-500 text-xs uppercase tracking-[0.2em] mt-2 mb-2">Gyms</Text>
+          <Text className="text-neutral-500 text-xs uppercase mt-2 mb-2">Gyms</Text>
         )}
 
         <ScanCard onPress={_handleButtonPressAsync} />
@@ -203,14 +202,23 @@ export function Home() {
         >
           <BottomSheetScrollView>
             <View className="px-7 pt-3">
-              <Text className="text-white text-4xl font-bold">{selectedGym?.name}</Text>
-              <View className="w-full h-[220px] rounded-2xl overflow-hidden mt-4 bg-neutral-900 border border-[#262626] items-center justify-center">
+              <View className="w-full h-[210px] rounded-2xl overflow-hidden bg-neutral-900 border border-[#262626] items-center justify-center">
                 <Image
                   source={selectedGym?.hero_image_url}
                   style={{ width: '100%', height: '100%' }}
                   transition={120}
                 />
               </View>
+              <ScrollView>
+                <Text className="text-white text-4xl mt-4 font-bold">{selectedGym?.name}</Text>
+                <View className="flex-row items-center mt-1">
+                  <Ionicons name="location-sharp" size={14} color="#9CAEAF" />
+                  <Text className="text-gray-400 text-sm">{selectedGym?.addr}</Text>
+                </View>
+                <View className="h-[1px] w-full bg-[#262626] mt-5"></View>
+                <Text className="text-white text-3xl mt-3">Activities at this Facility</Text>
+                <Text className="text-white text-3xl mt-3">Features</Text>
+              </ScrollView>
             </View>
           </BottomSheetScrollView>
         </BottomSheetModal>
