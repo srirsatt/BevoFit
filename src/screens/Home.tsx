@@ -20,7 +20,7 @@ import { FullWindowOverlay } from 'react-native-screens';
 export async function getFacilitiesMinimal() {
   const { data, error } = await supabase
     .from('facilities')
-    .select('id, name, slug, lat, lng, addr, facility_url, hero_image_path')
+    .select('id, name, slug, lat, lng, addr, facility_url, hero_image_path, facility_activities ( activity ), facility_features ( feature )')
 
   if (error) throw error;
   return data;
@@ -37,7 +37,7 @@ export async function getFacilityActivities() {
 
 export async function getFacilityFeatures() {
   const { data, error } = await supabase
-    .from('facility_features)')
+    .from('facility_features')
     .select('facility_id, feature')
 
   if (error) throw error;
@@ -67,6 +67,8 @@ type FacilityRow = {
   addr: string;
   facility_url: string;
   hero_image_path: string;
+  facility_features: string[];
+  facility_activities: string[];
 };
 
 type FacilityHoursRow = {
@@ -77,6 +79,14 @@ type FacilityHoursRow = {
   sat: string | null;
   sun: string | null;
   scraped_at: string;
+};
+
+type ActivityRow = {
+  activity: string;
+};
+
+type FeatureRow = {
+  feature: string;
 };
 
 type FacilityWithHours = FacilityRow & {
@@ -138,8 +148,7 @@ export function Home() {
           if (hero_image_url) {
             Image.prefetch(hero_image_url).catch(() => { });
           }
-
-          return { ...f, hero_image_url, hours: null };
+          return { ...f, hero_image_url, hours: null, facility_activities: f.facility_activities?.map((a: any) => a.activity) || [], facility_features: f.facility_features?.map((fea: any) => fea.feature) || [] };
         });
 
         if (isMounted) {
@@ -235,7 +244,22 @@ export function Home() {
                 </View>
                 <View className="h-[1px] w-full bg-[#262626] mt-5"></View>
                 <Text className="text-white text-3xl mt-3">Activities at this Facility</Text>
+                <View className="flex-row flex-wrap justify-between mt-2">
+                  {selectedGym?.facility_activities?.map((item, index) => (
+                    <View key={index} className="w-[48%] bg-[#1A1A1A] border border-[#262626] rounded-xl px-3 py-4 mb-3 items-center justify-center">
+                      <Text className="text-white text-center text-xs font-semibold uppercase tracking-wider">{item}</Text>
+                    </View>
+                  ))}
+                </View>
+
                 <Text className="text-white text-3xl mt-3">Features</Text>
+                <View className="flex-row flex-wrap justify-between mt-2">
+                  {selectedGym?.facility_features?.map((item, index) => (
+                    <View key={index} className="w-[48%] bg-[#1A1A1A] border border-[#262626] rounded-xl px-3 py-4 mb-3 items-center justify-center">
+                      <Text className="text-white text-center text-xs font-semibold uppercase tracking-wider">{item}</Text>
+                    </View>
+                  ))}
+                </View>
               </ScrollView>
             </View>
           </BottomSheetScrollView>
