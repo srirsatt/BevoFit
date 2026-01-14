@@ -250,7 +250,7 @@ export function Home() {
                 <View className="h-[1px] w-full bg-[#262626] mt-4"></View>
                 <Text className="text-white text-xl mt-3">{selectedGym?.general_info}</Text>
                 <View className="bg-[#262626] w-full h-[220px] rounded-2xl overflow-hidden mt-5">
-                  <Text className="text-white text-2xl font-bold pt-3 px-4">Regular Service Hours</Text>
+                  <Text className="text-white text-2xl font-bold pt-3 px-4">Regular Facility Hours</Text>
                   <View className="flex-row pt-4 px-5 justify-between">
                     <Text className="text-white font-bold">M-TH: </Text>
                     <Text className="text-white">11:00 AM - 11:00 PM</Text>

@@ -1,8 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import MapView, { Marker, Callout } from 'react-native-maps';
-import { StyleSheet, View } from 'react-native';
+import { FullWindowOverlay } from 'react-native-screens';
+import { StyleSheet, View, Text } from 'react-native';
 import { supabase } from '../lib/supabase';
-
+import { BottomSheetModal, BottomSheetScrollView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
+import * as Haptics from 'expo-haptics';
 
 /*
 desired facilities:
@@ -22,6 +24,8 @@ type FacilityMarker = {
     name: string,
     lat: number,
     lng: number,
+    general_info: string,
+    addr: string,
 };
 
 
@@ -29,6 +33,41 @@ export function Map() {
     const [pins, setPins] = useState<FacilityMarker[]>([]);
     // empty arr to start
     const [loading, setLoading] = useState(true);
+
+    // variables for bottomsheetmodal
+    const [selectedFacilityId, setSelectedFacilityId] = useState<string | null>(null);
+    const selectedFacility = useMemo(() => pins.find(p => p.id === selectedFacilityId), [pins, selectedFacilityId]);
+
+    const sheetRef = useRef<BottomSheetModal>(null);
+    const isPresentingRef = useRef(false);
+    const snapPoints = useMemo(() => ['40%'], []);
+
+
+    const handleMarkerPress = useCallback((gym: FacilityMarker) => {
+        if (isPresentingRef.current) return;
+
+        isPresentingRef.current = true;
+        setSelectedFacilityId(gym.id);
+
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        sheetRef.current?.present();
+    }, []);
+
+    const onDismiss = useCallback(() => {
+        isPresentingRef.current = false;
+        setSelectedFacilityId(null);
+
+    }, []);
+
+    const handleSheetChanges = useCallback((index: number) => {
+        if (index === -1) {
+            isPresentingRef.current = false;
+        }
+    }, []);
+
+    const renderBackdrop = (props: any) => (
+        <BottomSheetBackdrop {...props} appearsOnIndex={0} disappearsOnIndex={-1} pressBehavior="close" />
+    );
 
     // enter pins from supabase to pins array on load, then map them on succesful load
     useEffect(() => {
@@ -38,7 +77,7 @@ export function Map() {
 
             const { data, error } = await supabase
                 .from("facilities")
-                .select("id, name, lat, lng")
+                .select("id, name, lat, lng, general_info, addr")
                 .not("lat", "is", null)
                 .not("lng", "is", null);
 
@@ -63,33 +102,48 @@ export function Map() {
 
     return (
         <View style={styles.container}>
-            <MapView 
-                style={styles.map} 
+            <MapView
+                style={styles.map}
                 initialRegion={{
                     latitude: 30.284191170256957,
                     longitude: -97.73406558584728,
                     latitudeDelta: 0.009380758294785352,
                     longitudeDelta: 0.006013015735092608,
                 }}
-                onRegionChangeComplete ={(region) => {
+                onRegionChangeComplete={(region) => {
                     console.log("Centering", region.latitude, region.longitude);
                     console.log("Zoom deltas", region.latitudeDelta, region.longitudeDelta);
                 }}
             >
-                
-                
-            
+
+
+
                 {pins.map((f) => (
-                    <Marker 
+                    <Marker
                         key={f.id}
-                        coordinate={{ latitude: f.lat, longitude: f.lng}}
-                        title={f.name}
-                        onPress={() => console.log("clicked on ", f.name)}
-                    
+                        coordinate={{ latitude: f.lat, longitude: f.lng }}
+                        onPress={() => handleMarkerPress(f)}
+
                     />
                 ))}
-      
+
             </MapView>
+
+            <FullWindowOverlay>
+                <BottomSheetModal
+                    ref={sheetRef}
+                    snapPoints={snapPoints}
+                    onChange={handleSheetChanges}
+                    onDismiss={onDismiss}
+                    backdropComponent={renderBackdrop}
+                    backgroundStyle={{ backgroundColor: '#111111', borderTopLeftRadius: 20, borderTopRightRadius: 20 }}
+                    handleIndicatorStyle={{ backgroundColor: 'white', width: '10%', height: 5 }}
+                    enableDynamicSizing={false}
+                >
+                    <Text className="text-white font-large">Hello WOrld</Text>
+
+                </BottomSheetModal>
+            </FullWindowOverlay>
         </View>
     );
 }
