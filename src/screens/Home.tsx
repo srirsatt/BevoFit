@@ -184,7 +184,13 @@ export function Home() {
 
   const _handleButtonPressAsync = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    await WebBrowser.openBrowserAsync("https://secure.rs.utexas.edu/app/myrecsports/scan.php");
+
+    await WebBrowser.warmUpAsync();
+
+    await WebBrowser.openBrowserAsync("https://secure.rs.utexas.edu/app/myrecsports/scan.php", {
+      dismissButtonStyle: 'close',
+      enableDefaultShareMenuItem: false,
+    });
   }
 
   const renderBackdrop = (props: any) => (
