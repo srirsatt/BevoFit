@@ -129,6 +129,8 @@ export function Map() {
                     latitudeDelta: 0.009380758294785352,
                     longitudeDelta: 0.006013015735092608,
                 }}
+                showsUserLocation={true}
+                showsMyLocationButton={false}
                 onRegionChangeComplete={(region) => {
                     console.log("Centering", region.latitude, region.longitude);
                     console.log("Zoom deltas", region.latitudeDelta, region.longitudeDelta);
