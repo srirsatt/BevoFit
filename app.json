@@ -46,6 +46,7 @@
           "cameraPermissionText": "$(PRODUCT_NAME) needs access to your Camera."
         }
       ],
+      "react-native-map-link",
       "expo-web-browser",
       "expo-router"
     ],

@@ -1,10 +1,18 @@
 import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import MapView, { Marker, Callout } from 'react-native-maps';
 import { FullWindowOverlay } from 'react-native-screens';
-import { StyleSheet, View, Text } from 'react-native';
+import { StyleSheet, View, Text, Pressable } from 'react-native';
 import { supabase } from '../lib/supabase';
-import { BottomSheetModal, BottomSheetScrollView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
+import { BottomSheetModal, BottomSheetView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
 import * as Haptics from 'expo-haptics';
+import Ionicons from "@expo/vector-icons/Ionicons";
+import Animated, {
+    useSharedValue,
+    useAnimatedStyle,
+    withTiming,
+    Easing,
+} from 'react-native-reanimated';
+import { showLocation } from 'react-native-map-link';
 
 /*
 desired facilities:
@@ -40,7 +48,9 @@ export function Map() {
 
     const sheetRef = useRef<BottomSheetModal>(null);
     const isPresentingRef = useRef(false);
-    const snapPoints = useMemo(() => ['40%'], []);
+    const snapPoints = useMemo(() => ['45%'], []);
+    const scale = useSharedValue(1);
+    const rStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
 
 
     const handleMarkerPress = useCallback((gym: FacilityMarker) => {
@@ -68,6 +78,15 @@ export function Map() {
     const renderBackdrop = (props: any) => (
         <BottomSheetBackdrop {...props} appearsOnIndex={0} disappearsOnIndex={-1} pressBehavior="close" />
     );
+
+    // directions button press action
+    const openDirections = (addr: string | undefined) => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        showLocation({
+            address: addr,
+            directionsMode: 'walk'
+        })
+    }
 
     // enter pins from supabase to pins array on load, then map them on succesful load
     useEffect(() => {
@@ -122,9 +141,25 @@ export function Map() {
                     <Marker
                         key={f.id}
                         coordinate={{ latitude: f.lat, longitude: f.lng }}
-                        onPress={() => handleMarkerPress(f)}
-
-                    />
+                        onPress={(e) => { handleMarkerPress(f) }}
+                        flat={true}
+                        tracksViewChanges={false}
+                        stopPropagation={true}
+                        anchor={{ x: 0.5, y: 0.5 }}
+                    >
+                        <View style={{
+                            width: 36,
+                            height: 36,
+                            backgroundColor: '#BF5700',
+                            borderRadius: 18,
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            borderWidth: 2,
+                            borderColor: 'white'
+                        }}>
+                            <Ionicons name="barbell" size={20} color="white" />
+                        </View>
+                    </Marker>
                 ))}
 
             </MapView>
@@ -132,15 +167,43 @@ export function Map() {
             <FullWindowOverlay>
                 <BottomSheetModal
                     ref={sheetRef}
-                    snapPoints={snapPoints}
                     onChange={handleSheetChanges}
                     onDismiss={onDismiss}
                     backdropComponent={renderBackdrop}
                     backgroundStyle={{ backgroundColor: '#111111', borderTopLeftRadius: 20, borderTopRightRadius: 20 }}
                     handleIndicatorStyle={{ backgroundColor: 'white', width: '10%', height: 5 }}
-                    enableDynamicSizing={false}
+                    enableDynamicSizing={true}
+                    maxDynamicContentSize={600}
                 >
-                    <Text className="text-white font-large">Hello WOrld</Text>
+                    <BottomSheetView>
+                        <View className="px-6">
+                            <Text className="text-white text-3xl mt-1 font-bold">{selectedFacility?.name}</Text>
+                            <View className="flex-row items-center mt-2">
+                                <Ionicons name="location-sharp" size={14} color="#9CAEAF" />
+                                <Text className="text-gray-400 text-sm"> {selectedFacility?.addr}</Text>
+                            </View>
+                            <View className="h-[1px] w-full bg-[#262626] mt-5"></View>
+                            <Text className="text-white text-xl mt-3">{selectedFacility?.general_info}</Text>
+                            <AnimatedPressable
+                                style={rStyle}
+                                className="w-full bg-[#BF5700] h-[49px] mt-5 rounded-xl items-center justify-center"
+                                onPressIn={() => { scale.value = withTiming(0.95, { duration: 80 }); }}
+                                onPressOut={() => { scale.value = withTiming(1, { duration: 100 }); }}
+                                onPress={() => openDirections(selectedFacility?.addr)}
+                            >
+                                <Text className="text-white font-bold text-lg ">Directions</Text>
+                            </AnimatedPressable>
+                            <AnimatedPressable
+                                style={rStyle}
+                                className="w-full bg-[#262626] h-[49px] mt-3 mb-8 rounded-xl items-center justify-center"
+                                onPressIn={() => { scale.value = withTiming(0.95, { duration: 80 }); }}
+                                onPressOut={() => { scale.value = withTiming(1, { duration: 100 }); }}
+                                onPress={() => openDirections(selectedFacility?.addr)}
+                            >
+                                <Text className="text-white font-bold text-lg ">More Info</Text>
+                            </AnimatedPressable>
+                        </View>
+                    </BottomSheetView>
 
                 </BottomSheetModal>
             </FullWindowOverlay>
@@ -157,3 +220,5 @@ const styles = StyleSheet.create({
         height: '100%',
     },
 });
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
