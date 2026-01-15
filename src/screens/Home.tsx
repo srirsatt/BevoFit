@@ -108,6 +108,7 @@ export function Home() {
   const isPresentingRef = useRef(false);
   const snapPoints = useMemo(() => ['90%'], []);
 
+
   const handleModalPress = useCallback((gym: FacilityWithHours) => {
     if (isPresentingRef.current) return;
 
@@ -141,7 +142,7 @@ export function Home() {
         const facilities = await getFacilitiesMinimal();
 
         // 2. Generate URLs and start prefetching immediately
-        const initialGyms = facilities.map((f: FacilityRow) => {
+        const initialGyms = facilities.map((f) => {
           const hero_image_url = f.hero_image_path
             ? supabase.storage.from('facility-imgs').getPublicUrl(f.hero_image_path).data.publicUrl
             : null;
@@ -182,6 +183,7 @@ export function Home() {
     return () => { isMounted = false; };
   }, []);
 
+
   const _handleButtonPressAsync = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
@@ -199,6 +201,44 @@ export function Home() {
 
   const insets = useSafeAreaInsets();
 
+  // for activities and features 
+  const ActivityChip = ({ label }: { label: string }) => {
+    // Optional: slightly smaller font for long labels (helps avoid ugly truncation)
+    const isLong = label.length > 18;
+
+    return (
+      <View
+        className="
+        w-[48%]
+        h-14
+        rounded-2xl
+        px-3
+        mb-3
+        items-center
+        justify-center
+        border
+      "
+        style={{
+          backgroundColor: '#15161A',               // softer than #1A1A1A
+          borderColor: 'rgba(255,255,255,0.08)',   // subtle border
+        }}
+      >
+        <Text
+          className="text-white text-center font-semibold uppercase"
+          style={{
+            fontSize: isLong ? 10 : 11,
+            letterSpacing: 0.4,
+            opacity: 0.92,
+          }}
+          numberOfLines={1}
+          ellipsizeMode="tail"
+        >
+          {label}
+        </Text>
+      </View>
+    );
+  };
+
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <View className="w-full px-5 mt-4">
@@ -206,7 +246,13 @@ export function Home() {
         <Text className="text-[#BF5700] text-6xl mt-2 font-extrabold">BevoFit</Text>
       </View>
 
-      <ScrollView className="flex-1 px-5 pb-8">
+      <ScrollView
+        className="flex-1 px-5"
+        contentContainerStyle={{
+          paddingBottom: insets.bottom + 50
+        }}
+
+      >
         {gymsLoading && <Text className="text-neutral-500 text-xs uppercase mt-2 mb-2">Loading Facilities...</Text>}
 
         {!gymsLoading && gyms.length > 0 && (
@@ -276,21 +322,17 @@ export function Home() {
 
                 </View>
 
-                <Text className="text-white text-2xl mt-4 font-bold">Activities at this Facility</Text>
+                <Text className="text-white text-2xl mt-4 font-bold">Facility Activities</Text>
                 <View className="flex-row flex-wrap justify-between mt-2">
                   {selectedGym?.facility_activities?.map((item, index) => (
-                    <View key={index} className="w-[48%] bg-[#1A1A1A] border border-[#262626] rounded-xl px-3 py-4 mb-3 items-center justify-center">
-                      <Text className="text-white text-center text-xs font-semibold uppercase tracking-wider">{item}</Text>
-                    </View>
+                    <ActivityChip key={`${item}-${index}`} label={item} />
                   ))}
                 </View>
 
                 <Text className="text-white text-2xl font-bold mt-1">Features</Text>
                 <View className="flex-row flex-wrap justify-between mt-2">
                   {selectedGym?.facility_features?.map((item, index) => (
-                    <View key={index} className="w-[48%] bg-[#1A1A1A] border border-[#262626] rounded-xl px-3 py-4 mb-3 items-center justify-center">
-                      <Text className="text-white text-center text-xs font-semibold uppercase tracking-wider">{item}</Text>
-                    </View>
+                    <ActivityChip key={`${item}-${index}`} label={item} />
                   ))}
                 </View>
               </ScrollView>

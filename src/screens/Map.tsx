@@ -13,6 +13,7 @@ import Animated, {
     Easing,
 } from 'react-native-reanimated';
 import { showLocation } from 'react-native-map-link';
+import { useRouter } from 'expo-router';
 
 /*
 desired facilities:
@@ -49,8 +50,10 @@ export function Map() {
     const sheetRef = useRef<BottomSheetModal>(null);
     const isPresentingRef = useRef(false);
     const snapPoints = useMemo(() => ['45%'], []);
-    const scale = useSharedValue(1);
-    const rStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+    const directionsScale = useSharedValue(1);
+    const directionsStyle = useAnimatedStyle(() => ({ transform: [{ scale: directionsScale.value }] }));
+    const closeScale = useSharedValue(1);
+    const closeStyle = useAnimatedStyle(() => ({ transform: [{ scale: closeScale.value }] }));
 
 
     const handleMarkerPress = useCallback((gym: FacilityMarker) => {
@@ -74,6 +77,12 @@ export function Map() {
             isPresentingRef.current = false;
         }
     }, []);
+
+    // handler for more info button -> moves to modal press from home
+    const handleClose = () => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        sheetRef.current?.dismiss();
+    }
 
     const renderBackdrop = (props: any) => (
         <BottomSheetBackdrop {...props} appearsOnIndex={0} disappearsOnIndex={-1} pressBehavior="close" />
@@ -187,22 +196,22 @@ export function Map() {
                             <View className="h-[1px] w-full bg-[#262626] mt-5"></View>
                             <Text className="text-white text-xl mt-3">{selectedFacility?.general_info}</Text>
                             <AnimatedPressable
-                                style={rStyle}
+                                style={directionsStyle}
                                 className="w-full bg-[#BF5700] h-[49px] mt-5 rounded-xl items-center justify-center"
-                                onPressIn={() => { scale.value = withTiming(0.95, { duration: 80 }); }}
-                                onPressOut={() => { scale.value = withTiming(1, { duration: 100 }); }}
+                                onPressIn={() => { directionsScale.value = withTiming(0.95, { duration: 80 }); }}
+                                onPressOut={() => { directionsScale.value = withTiming(1, { duration: 100 }); }}
                                 onPress={() => openDirections(selectedFacility?.addr)}
                             >
                                 <Text className="text-white font-bold text-lg ">Directions</Text>
                             </AnimatedPressable>
                             <AnimatedPressable
-                                style={rStyle}
+                                style={closeStyle}
                                 className="w-full bg-[#262626] h-[49px] mt-3 mb-8 rounded-xl items-center justify-center"
-                                onPressIn={() => { scale.value = withTiming(0.95, { duration: 80 }); }}
-                                onPressOut={() => { scale.value = withTiming(1, { duration: 100 }); }}
-                                onPress={() => openDirections(selectedFacility?.addr)}
+                                onPressIn={() => { closeScale.value = withTiming(0.95, { duration: 80 }); }}
+                                onPressOut={() => { closeScale.value = withTiming(1, { duration: 100 }); }}
+                                onPress={() => handleClose()}
                             >
-                                <Text className="text-white font-bold text-lg ">More Info</Text>
+                                <Text className="text-white font-bold text-lg ">Close</Text>
                             </AnimatedPressable>
                         </View>
                     </BottomSheetView>
