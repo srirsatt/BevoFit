@@ -16,11 +16,12 @@ import { supabase } from '../lib/supabase';
 import * as Haptics from 'expo-haptics';
 import { BottomSheetModal, BottomSheetScrollView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
 import { FullWindowOverlay } from 'react-native-screens';
+import { formatInTimeZone } from 'date-fns-tz';
 
 export async function getFacilitiesMinimal() {
   const { data, error } = await supabase
     .from('facilities')
-    .select('id, name, slug, lat, lng, addr, facility_url, hero_image_path, general_info, facility_activities ( activity ), facility_features ( feature )')
+    .select('id, name, slug, lat, lng, addr, facility_url, hero_image_path, general_info, facility_activities ( activity ), facility_features ( feature ), facility_hours ( * )')
 
   if (error) throw error;
   return data;
@@ -49,9 +50,6 @@ export async function getLatestHoursForFacility(facilityId: string) {
     .from('facility_hours')
     .select('*')
     .eq('facility_id', facilityId)
-    .order('scraped_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
 
   if (error) throw error;
   return data;
@@ -72,28 +70,121 @@ type FacilityRow = {
   facility_activities: string[];
 };
 
-type FacilityHoursRow = {
-  facility_id: string;
-  season_label: string | null;
-  mon_thu: string | null;
-  fri: string | null;
-  sat: string | null;
-  sun: string | null;
-  scraped_at: string;
-};
-
-type ActivityRow = {
-  activity: string;
-};
-
-type FeatureRow = {
-  feature: string;
+type FacilityHours = {
+  mon?: string | null;
+  tue?: string | null;
+  wed?: string | null;
+  thu?: string | null;
+  fri?: string | null;
+  sat?: string | null;
+  sun?: string | null;
+  special_date?: string | null;   // "YYYY-MM-DD"
+  special_hours?: string | null;
 };
 
 type FacilityWithHours = FacilityRow & {
-  hours?: FacilityHoursRow | null;
+  hours?: FacilityHours | null;
   hero_image_url?: string | null;
 };
+
+// Helper function to convert 12-hour time to 24-hour format
+function convertTo24Hour(hour: number, minute: number, period: string): string {
+  let hour24 = hour;
+
+  if (period.toUpperCase() === 'PM' && hour !== 12) {
+    hour24 = hour + 12;
+  } else if (period.toUpperCase() === 'AM' && hour === 12) {
+    hour24 = 0;
+  }
+
+  return `${hour24.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+}
+
+// Helper function to check if current time is within a time range
+function isTimeInRange(currentTime: string, hoursString: string): boolean {
+  // Parse "10:00 AM - 11:00 PM" format
+  const match = hoursString.match(/(\d{1,2}):(\d{2})\s*(AM|PM)\s*-\s*(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+
+  if (!match) return false;
+
+  const [_, openHour, openMin, openPeriod, closeHour, closeMin, closePeriod] = match;
+
+  // Convert to 24-hour format
+  const openTime = convertTo24Hour(parseInt(openHour), parseInt(openMin), openPeriod);
+  const closeTime = convertTo24Hour(parseInt(closeHour), parseInt(closeMin), closePeriod);
+
+  // Current time is already in "HH:mm" 24-hour format
+  const [currentHour, currentMin] = currentTime.split(':').map(Number);
+  const currentMinutes = currentHour * 60 + currentMin;
+  const openMinutes = parseInt(openTime.split(':')[0]) * 60 + parseInt(openTime.split(':')[1]);
+  const closeMinutes = parseInt(closeTime.split(':')[0]) * 60 + parseInt(closeTime.split(':')[1]);
+
+  // Handle overnight hours (e.g., 10 PM - 2 AM)
+  if (closeMinutes < openMinutes) {
+    return currentMinutes >= openMinutes || currentMinutes <= closeMinutes;
+  }
+
+  return currentMinutes >= openMinutes && currentMinutes <= closeMinutes;
+}
+
+// Main function to check if facility is currently open
+export function isFacilityOpen(hours: FacilityHours | null | undefined): boolean {
+  if (!hours) return false;
+
+  // 1. Get current time in Austin (Central Time)
+  const now = new Date();
+  const austinTimeZone = 'America/Chicago';
+
+  // 2. Get current day of week (0 = Sunday, 1 = Monday, etc.)
+  const dayOfWeek = parseInt(formatInTimeZone(now, austinTimeZone, 'i')); // 1-7 (Mon-Sun)
+  const currentTime = formatInTimeZone(now, austinTimeZone, 'HH:mm'); // "14:30"
+
+  // 3. Check for special hours first (overrides regular hours)
+  if (hours.special_date && hours.special_hours) {
+    const todayDate = formatInTimeZone(now, austinTimeZone, 'yyyy-MM-dd');
+    if (todayDate === hours.special_date) {
+      if (hours.special_hours.toLowerCase() === 'closed') return false;
+      return isTimeInRange(currentTime, hours.special_hours);
+    }
+  }
+
+  // 4. Get today's hours string based on day of week
+  let todayHours: string | null | undefined;
+
+  if (dayOfWeek === 7) {
+    // Sunday
+    todayHours = hours.sun;
+  } else if (dayOfWeek === 6) {
+    // Saturday
+    todayHours = hours.sat;
+  } else if (dayOfWeek === 5) {
+    // Friday
+    todayHours = hours.fri;
+  } else {
+    // Monday-Thursday
+    todayHours = hours.mon || hours.tue || hours.wed || hours.thu;
+  }
+
+  // 5. Check if closed or no hours
+  if (!todayHours || todayHours.toLowerCase().includes('closed')) {
+    return false;
+  }
+
+  // 6. Parse hours and check if current time is in range
+  return isTimeInRange(currentTime, todayHours);
+}
+
+function parseIntervals(hoursStr?: string | null): string[] {
+  if (!hoursStr) return [];
+  const s = hoursStr.trim();
+  if (!s || s.toLowerCase().includes('closed')) return [];
+  // split on pipe and normalize spacing
+  return s
+    .split('|')
+    .map(part => part.trim())
+    .filter(Boolean);
+}
+
 
 export function Home() {
   const [gyms, setGyms] = useState<FacilityWithHours[]>([]);
@@ -140,9 +231,11 @@ export function Home() {
 
         // 1. Fetch facilities basic info (FAST)
         const facilities = await getFacilitiesMinimal();
+        //console.log("first facility hours field:", facilities?.[0]?.facility_hours);
 
         // 2. Generate URLs and start prefetching immediately
         const initialGyms = facilities.map((f) => {
+
           const hero_image_url = f.hero_image_path
             ? supabase.storage.from('facility-imgs').getPublicUrl(f.hero_image_path).data.publicUrl
             : null;
@@ -150,7 +243,7 @@ export function Home() {
           if (hero_image_url) {
             Image.prefetch(hero_image_url).catch(() => { });
           }
-          return { ...f, hero_image_url, hours: null, facility_activities: f.facility_activities?.map((a: any) => a.activity) || [], facility_features: f.facility_features?.map((fea: any) => fea.feature) || [] };
+          return { ...f, hero_image_url, hours: f.facility_hours || null, facility_activities: f.facility_activities?.map((a: any) => a.activity) || [], facility_features: f.facility_features?.map((fea: any) => fea.feature) || [] } as unknown as FacilityWithHours;
         });
 
         if (isMounted) {
@@ -159,17 +252,6 @@ export function Home() {
         }
 
         // 3. Update with hours in background
-        const hoursPromises = facilities.map(f => getLatestHoursForFacility(f.id));
-        const allHoursCount = await Promise.all(hoursPromises);
-
-        const gymsWithHours = initialGyms.map((gym, index) => ({
-          ...gym,
-          hours: allHoursCount[index]
-        }));
-
-        if (isMounted) {
-          setGyms(gymsWithHours);
-        }
       } catch (e: any) {
         console.error('Error in loadGyms:', e);
         if (isMounted) {
@@ -249,7 +331,7 @@ export function Home() {
       <ScrollView
         className="flex-1 px-5"
         contentContainerStyle={{
-          paddingBottom: insets.bottom + 50
+          paddingBottom: insets.bottom + 55
         }}
 
       >
@@ -267,6 +349,13 @@ export function Home() {
             onPress={handleModalPress}
           />
         ))}
+        <View className="w-full items-center">
+          <Text
+            className="text-center text-neutral-500 text-xs"
+          >
+            Photos © UT Recreational Sports
+          </Text>
+        </View>
       </ScrollView>
 
       <FullWindowOverlay>
@@ -293,7 +382,7 @@ export function Home() {
                 <Text className="text-white text-4xl mt-4 font-bold">{selectedGym?.name}</Text>
                 <View className="flex-row items-center mt-1">
                   <Ionicons name="time-outline" size={15} color="#BF5700" />
-                  <Text className="text-[#BF5700] text-lg font-bold"> Open</Text>
+                  <Text className="text-[#BF5700] text-lg font-bold"> {isFacilityOpen(selectedGym?.hours) ? "Open" : "Closed"}</Text>
                 </View>
                 <View className="flex-row items-center mt-1">
                   <Ionicons name="location-sharp" size={14} color="#9CAEAF" />
@@ -301,25 +390,21 @@ export function Home() {
                 </View>
                 <View className="h-[1px] w-full bg-[#262626] mt-4"></View>
                 <Text className="text-white text-xl mt-3">{selectedGym?.general_info}</Text>
-                <View className="bg-[#262626] w-full h-[220px] rounded-2xl overflow-hidden mt-5">
-                  <Text className="text-white text-2xl font-bold pt-3 px-4">Regular Facility Hours</Text>
-                  <View className="flex-row pt-4 px-5 justify-between">
-                    <Text className="text-white font-bold">M-TH: </Text>
-                    <Text className="text-white">11:00 AM - 11:00 PM</Text>
-                  </View>
-                  <View className="flex-row pt-8 px-5 justify-between">
-                    <Text className="text-white font-bold">Fri: </Text>
-                    <Text className="text-white">11:00 AM - 11:00 PM</Text>
-                  </View>
-                  <View className="flex-row pt-8 px-5 justify-between">
-                    <Text className="text-white font-bold">Sat: </Text>
-                    <Text className="text-white">11:00 AM - 11:00 PM</Text>
-                  </View>
-                  <View className="flex-row pt-8 px-5 justify-between">
-                    <Text className="text-white font-bold">Sun: </Text>
-                    <Text className="text-white">11:00 AM - 11:00 PM</Text>
-                  </View>
+                <View className="bg-[#262626] w-full rounded-2xl overflow-hidden mt-5">
+                  <Text className="text-white text-2xl font-bold pt-3 px-4">
+                    Regular Facility Hours
+                  </Text>
 
+                  <HoursRow label="M–Th" value={selectedGym?.hours?.mon} />
+                  <View className="h-[1px] bg-white/10 mx-5" />
+
+                  <HoursRow label="Fri" value={selectedGym?.hours?.fri} />
+                  <View className="h-[1px] bg-white/10 mx-5" />
+
+                  <HoursRow label="Sat" value={selectedGym?.hours?.sat} />
+                  <View className="h-[1px] bg-white/10 mx-5" />
+
+                  <HoursRow label="Sun" value={selectedGym?.hours?.sun} />
                 </View>
 
                 <Text className="text-white text-2xl mt-4 font-bold">Facility Activities</Text>
@@ -344,12 +429,14 @@ export function Home() {
   );
 }
 
+
 // --- Sub-components moved outside for performance ---
 
 const Card = ({ gym, onPress }: { gym: FacilityWithHours; onPress: (gym: FacilityWithHours) => void }) => {
   const scale = useSharedValue(1);
   const rStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
-
+  const isOpen = isFacilityOpen(gym.hours);
+  const openStyle = isOpen ? "text-[#2FBF71] text-4xl" : "text-[#E5533D] text-4xl"
   return (
     <AnimatedPressable
       style={rStyle}
@@ -360,11 +447,18 @@ const Card = ({ gym, onPress }: { gym: FacilityWithHours; onPress: (gym: Facilit
     >
       <View>
         <Text className="text-white pb-1 text-xl font-bold">{gym.name}</Text>
-        <Text className="text-neutral-400 text-xs">
-          {gym.hours ? gym.hours.mon_thu : 'Loading hours...'}
-        </Text>
+        <View className="flex-row items-center" >
+          <View className="w-2 h-2 rounded-full mr-1.5" style={{ backgroundColor: isOpen ? '#2FBF71' : '#E5533D' }} />
+          <Text className="text-neutral-400 text-sm font-semibold">
+            {isOpen ? 'Open ' : 'Closed '}
+          </Text>
+          <Text className="text-neutral-400 text-sm">
+            {isOpen ? 'for 5 minutes' : ''}
+          </Text>
+        </View>
+
       </View>
-      <Text className="text-[#2ECC71] text-4xl">▶</Text>
+      <Text className={openStyle}>▶</Text>
     </AnimatedPressable>
   );
 }
@@ -386,6 +480,51 @@ const ScanCard = ({ onPress }: { onPress: () => void }) => {
     </AnimatedPressable>
   );
 }
+
+const HoursRow = ({ label, value }: { label: string; value?: string | null }) => {
+  const intervals = parseIntervals(value);
+  const isClosed = intervals.length === 0;
+
+  return (
+    <View className="flex-row justify-between px-5 py-3">
+      {/* Left: day label */}
+      <Text className="text-white font-bold w-16">{label}</Text>
+
+      {/* Right: stacked intervals */}
+      <View className="flex-1 items-end">
+        {isClosed ? (
+          <View
+            style={{
+              paddingHorizontal: 10,
+              paddingVertical: 4,
+              borderRadius: 999,
+              backgroundColor: 'rgba(255,255,255,0.08)',
+              borderWidth: 1,
+              borderColor: 'rgba(255,255,255,0.10)',
+            }}
+          >
+            <Text className="text-white text-xs" style={{ opacity: 0.85 }}>
+              Closed
+            </Text>
+          </View>
+        ) : (
+          intervals.map((t, i) => (
+            <Text
+              key={`${label}-${i}`}
+              className="text-white"
+              style={{
+                opacity: 0.95,
+                marginTop: i === 0 ? 0 : 6, // spacing between stacked lines
+              }}
+            >
+              {t}
+            </Text>
+          ))
+        )}
+      </View>
+    </View>
+  );
+};
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: 'black' },

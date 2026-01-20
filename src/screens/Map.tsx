@@ -89,12 +89,13 @@ export function Map() {
     );
 
     // directions button press action
-    const openDirections = (addr: string | undefined) => {
+    const openDirections = (addr: string | undefined, name: string | undefined) => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
         showLocation({
             address: addr,
-            directionsMode: 'walk'
-        })
+            directionsMode: 'walk',
+            title: name,
+        });
     }
 
     // enter pins from supabase to pins array on load, then map them on succesful load
@@ -200,7 +201,7 @@ export function Map() {
                                 className="w-full bg-[#BF5700] h-[49px] mt-5 rounded-xl items-center justify-center"
                                 onPressIn={() => { directionsScale.value = withTiming(0.95, { duration: 80 }); }}
                                 onPressOut={() => { directionsScale.value = withTiming(1, { duration: 100 }); }}
-                                onPress={() => openDirections(selectedFacility?.addr)}
+                                onPress={() => openDirections(selectedFacility?.addr, selectedFacility?.name)}
                             >
                                 <Text className="text-white font-bold text-lg ">Directions</Text>
                             </AnimatedPressable>
