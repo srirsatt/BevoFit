@@ -101,11 +101,11 @@ function convertTo24Hour(hour: number, minute: number, period: string): string {
 }
 
 // Helper function to check if current time is within a time range
-function isTimeInRange(currentTime: string, hoursString: string): boolean {
+function isTimeInRange(currentTime: string, hoursString: string): { isOpen: boolean, minutesLeft: number | null } {
   // Parse "10:00 AM - 11:00 PM" format
   const match = hoursString.match(/(\d{1,2}):(\d{2})\s*(AM|PM)\s*-\s*(\d{1,2}):(\d{2})\s*(AM|PM)/i);
 
-  if (!match) return false;
+  if (!match) return { isOpen: false, minutesLeft: null };
 
   const [_, openHour, openMin, openPeriod, closeHour, closeMin, closePeriod] = match;
 
@@ -121,15 +121,31 @@ function isTimeInRange(currentTime: string, hoursString: string): boolean {
 
   // Handle overnight hours (e.g., 10 PM - 2 AM)
   if (closeMinutes < openMinutes) {
-    return currentMinutes >= openMinutes || currentMinutes <= closeMinutes;
+    const minCheck = currentMinutes >= openMinutes || currentMinutes <= closeMinutes;
+    if (minCheck) {
+      let minutesLeft: number;
+      if (currentMinutes >= openMinutes) {
+        minutesLeft = (24 * 60 - currentMinutes) + closeMinutes;
+      } else {
+        minutesLeft = closeMinutes - currentMinutes;
+      }
+      return { isOpen: true, minutesLeft }
+    } else {
+      return { isOpen: false, minutesLeft: null }
+    }
   }
 
-  return currentMinutes >= openMinutes && currentMinutes <= closeMinutes;
+  const minCheck = currentMinutes >= openMinutes && currentMinutes <= closeMinutes;
+  if (minCheck) {
+    return { isOpen: true, minutesLeft: closeMinutes - currentMinutes }
+  } else {
+    return { isOpen: false, minutesLeft: null }
+  }
 }
 
 // Main function to check if facility is currently open
-export function isFacilityOpen(hours: FacilityHours | null | undefined): boolean {
-  if (!hours) return false;
+export function isFacilityOpen(hours: FacilityHours | null | undefined): { isOpen: boolean, minutesLeft: number | null } {
+  if (!hours) return { isOpen: false, minutesLeft: null };
 
   // 1. Get current time in Austin (Central Time)
   const now = new Date();
@@ -143,10 +159,11 @@ export function isFacilityOpen(hours: FacilityHours | null | undefined): boolean
   if (hours.special_date && hours.special_hours) {
     const todayDate = formatInTimeZone(now, austinTimeZone, 'yyyy-MM-dd');
     if (todayDate === hours.special_date) {
-      if (hours.special_hours.toLowerCase() === 'closed') return false;
+      if (hours.special_hours.toLowerCase() === 'closed') return { isOpen: false, minutesLeft: null };
       return isTimeInRange(currentTime, hours.special_hours);
     }
   }
+
 
   // 4. Get today's hours string based on day of week
   let todayHours: string | null | undefined;
@@ -167,7 +184,7 @@ export function isFacilityOpen(hours: FacilityHours | null | undefined): boolean
 
   // 5. Check if closed or no hours
   if (!todayHours || todayHours.toLowerCase().includes('closed')) {
-    return false;
+    return { isOpen: false, minutesLeft: null };
   }
 
   // 6. Parse hours and check if current time is in range
@@ -382,7 +399,7 @@ export function Home() {
                 <Text className="text-white text-4xl mt-4 font-bold">{selectedGym?.name}</Text>
                 <View className="flex-row items-center mt-1">
                   <Ionicons name="time-outline" size={15} color="#BF5700" />
-                  <Text className="text-[#BF5700] text-lg font-bold"> {isFacilityOpen(selectedGym?.hours) ? "Open" : "Closed"}</Text>
+                  <Text className="text-[#BF5700] text-lg font-bold"> {isFacilityOpen(selectedGym?.hours).isOpen ? "Open" : "Closed"}</Text>
                 </View>
                 <View className="flex-row items-center mt-1">
                   <Ionicons name="location-sharp" size={14} color="#9CAEAF" />
@@ -435,8 +452,26 @@ export function Home() {
 const Card = ({ gym, onPress }: { gym: FacilityWithHours; onPress: (gym: FacilityWithHours) => void }) => {
   const scale = useSharedValue(1);
   const rStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
-  const isOpen = isFacilityOpen(gym.hours);
+  const { isOpen, minutesLeft } = isFacilityOpen(gym.hours);
   const openStyle = isOpen ? "text-[#2FBF71] text-4xl" : "text-[#E5533D] text-4xl"
+
+  let timeDisplay = '';
+  if (minutesLeft != null) {
+    const hours = Math.floor(minutesLeft / 60);
+    const mins = minutesLeft % 60;
+
+    if (hours == 1 && mins > 0) {
+      timeDisplay = `${hours} hour and ${mins} minutes`;
+    } else if (hours == 1) {
+      timeDisplay = `${hours} hour`;
+    } else if (hours > 0 && mins > 0) {
+      timeDisplay = `${hours} hours and ${mins} minutes`;
+    } else if (hours > 0) {
+      timeDisplay = `${hours} hours`;
+    } else {
+      timeDisplay = `${mins} minutes`;
+    }
+  }
   return (
     <AnimatedPressable
       style={rStyle}
@@ -453,7 +488,7 @@ const Card = ({ gym, onPress }: { gym: FacilityWithHours; onPress: (gym: Facilit
             {isOpen ? 'Open ' : 'Closed '}
           </Text>
           <Text className="text-neutral-400 text-sm">
-            {isOpen ? 'for 5 minutes' : ''}
+            {isOpen && timeDisplay ? `for ${timeDisplay}` : ''}
           </Text>
         </View>
 

@@ -1,7 +1,17 @@
-import { Text } from 'react-native';
+import { Text, View } from 'react-native';
 
 export function Intramurals() {
     return (
-        <Text className="text-white text-lg">Hello World!</Text>
+        <View
+            style={{
+                flex: 1,
+                backgroundColor: 'black',
+            }}
+        >
+
+        </View>
     )
 }
+
+
+
