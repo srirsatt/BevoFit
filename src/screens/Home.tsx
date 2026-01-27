@@ -1,4 +1,4 @@
-import { StyleSheet, View, Text, ScrollView, Pressable, ActivityIndicator } from 'react-native';
+import { StyleSheet, View, Text, ScrollView, Pressable, ActivityIndicator, RefreshControl } from 'react-native';
 import { Image } from 'expo-image';
 import Animated, {
   useSharedValue,
@@ -207,6 +207,7 @@ export function Home() {
   const [gyms, setGyms] = useState<FacilityWithHours[]>([]);
   const [gymsLoading, setGymsLoading] = useState(true);
   const [gymsError, setGymsError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   // Reactive selected gym state
   const [selectedGymId, setSelectedGymId] = useState<string | null>(null);
@@ -238,47 +239,56 @@ export function Home() {
     }
   }, []);
 
-  useEffect(() => {
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
     let isMounted = true;
+    loadGyms(isMounted);
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 450);
+    return () => { isMounted = false; };
+  }, []);
 
-    async function loadGyms() {
-      try {
-        setGymsLoading(true);
-        setGymsError(null);
+  async function loadGyms(isMounted: boolean) {
+    try {
+      setGymsLoading(true);
+      setGymsError(null);
 
-        // 1. Fetch facilities basic info (FAST)
-        const facilities = await getFacilitiesMinimal();
-        //console.log("first facility hours field:", facilities?.[0]?.facility_hours);
+      // 1. Fetch facilities basic info (FAST)
+      const facilities = await getFacilitiesMinimal();
+      //console.log("first facility hours field:", facilities?.[0]?.facility_hours);
 
-        // 2. Generate URLs and start prefetching immediately
-        const initialGyms = facilities.map((f) => {
+      // 2. Generate URLs and start prefetching immediately
+      const initialGyms = facilities.map((f) => {
 
-          const hero_image_url = f.hero_image_path
-            ? supabase.storage.from('facility-imgs').getPublicUrl(f.hero_image_path).data.publicUrl
-            : null;
+        const hero_image_url = f.hero_image_path
+          ? supabase.storage.from('facility-imgs').getPublicUrl(f.hero_image_path).data.publicUrl
+          : null;
 
-          if (hero_image_url) {
-            Image.prefetch(hero_image_url).catch(() => { });
-          }
-          return { ...f, hero_image_url, hours: f.facility_hours || null, facility_activities: f.facility_activities?.map((a: any) => a.activity) || [], facility_features: f.facility_features?.map((fea: any) => fea.feature) || [] } as unknown as FacilityWithHours;
-        });
-
-        if (isMounted) {
-          setGyms(initialGyms);
-          setGymsLoading(false);
+        if (hero_image_url) {
+          Image.prefetch(hero_image_url).catch(() => { });
         }
+        return { ...f, hero_image_url, hours: f.facility_hours || null, facility_activities: f.facility_activities?.map((a: any) => a.activity) || [], facility_features: f.facility_features?.map((fea: any) => fea.feature) || [] } as unknown as FacilityWithHours;
+      });
 
-        // 3. Update with hours in background
-      } catch (e: any) {
-        console.error('Error in loadGyms:', e);
-        if (isMounted) {
-          setGymsError(e.message);
-          setGymsLoading(false);
-        }
+      if (isMounted) {
+        setGyms(initialGyms);
+        setGymsLoading(false);
+      }
+
+      // 3. Update with hours in background
+    } catch (e: any) {
+      console.error('Error in loadGyms:', e);
+      if (isMounted) {
+        setGymsError(e.message);
+        setGymsLoading(false);
       }
     }
+  }
 
-    loadGyms();
+  useEffect(() => {
+    let isMounted = true;
+    loadGyms(isMounted);
     return () => { isMounted = false; };
   }, []);
 
@@ -350,7 +360,9 @@ export function Home() {
         contentContainerStyle={{
           paddingBottom: insets.bottom + 55
         }}
-
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
       >
         {gymsLoading && <Text className="text-neutral-500 text-xs uppercase mt-2 mb-2">Loading Facilities...</Text>}
 
