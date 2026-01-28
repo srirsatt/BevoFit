@@ -245,7 +245,7 @@ export function Home() {
     loadGyms(isMounted);
     setTimeout(() => {
       setRefreshing(false);
-    }, 450);
+    }, 250);
     return () => { isMounted = false; };
   }, []);
 
@@ -364,7 +364,7 @@ export function Home() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        {gymsLoading && <Text className="text-neutral-500 text-xs uppercase mt-2 mb-2">Loading Facilities...</Text>}
+        {gymsLoading && <Text className="text-neutral-500 text-xs uppercase mt-2 mb-2">Gyms Loading...</Text>}
 
         {!gymsLoading && gyms.length > 0 && (
           <Text className="text-neutral-500 text-xs uppercase mt-2 mb-2">Gyms</Text>

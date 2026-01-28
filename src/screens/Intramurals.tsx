@@ -1,5 +1,5 @@
 import { Text, View, Pressable, RefreshControl, ScrollView } from 'react-native';
-import { } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as WebBrowser from 'expo-web-browser';
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -10,12 +10,64 @@ import Animated, {
     Easing,
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
+import { supabase } from '../lib/supabase';
+
+type IntramuralStructure = {
+    id: number;
+    category: string;
+    event_name: string;
+    event_fee: string;
+    reg_dates: string;
+    event_dates: string;
+};
+
+export async function getIntramurals() {
+    const { data, error } = await supabase
+        .from('intramurals')
+        .select('*')
+
+    if (error) throw error;
+    return data;
+};
 
 export function Intramurals() {
 
     const insets = useSafeAreaInsets();
     const intramuralInfo = "The Intramural Sports program provides competitive and recreational sports leagues, " +
         "tournaments, and special events for all students, regardless of skill level."
+    const [intramurals, setIntramurals] = useState<IntramuralStructure[]>([]);
+    const [intramuralsLoading, setIntramuralsLoading] = useState(true);
+    const [intramuralsError, setIntramuralsError] = useState<string | null>(null);
+
+
+    async function loadIntramurals(isMounted: boolean) {
+        try {
+            const facilities = await getIntramurals();
+
+            const initialIntramurals = facilities.map((f) => {
+                return { ...f }
+            });
+
+            if (isMounted) {
+                setIntramurals(initialIntramurals);
+                setIntramuralsLoading(false);
+            }
+
+        } catch (e: any) {
+            console.error("Error in loadIntramurals: ", e);
+            if (isMounted) {
+                setIntramuralsError(e.message);
+                setIntramuralsLoading(false);
+            }
+        }
+    }
+
+    useEffect(() => {
+        let isMounted = true;
+        loadIntramurals(isMounted);
+        return () => { isMounted = false; };
+    }, []);
+
 
     const IMLeaguesCard = ({ onPress }: { onPress: () => void }) => {
         const scale = useSharedValue(1);
@@ -33,6 +85,16 @@ export function Intramurals() {
                 <Ionicons name="people-outline" color="white" size={40} />
             </AnimatedPressable>
         );
+    }
+
+    const CalendarCard = () => {
+        return (
+            <View
+                className="w-full p-5 bg-[#111111] rounded-2xl"
+            >
+                <Text className="text-white">{intramurals.length}</Text>
+            </View>
+        )
     }
 
     const _handleButtonPressAsync = async () => {
@@ -64,9 +126,10 @@ export function Intramurals() {
                     paddingBottom: insets.bottom + 55
                 }}
             >
-                <Text className="text-neutral-500 text-xs uppercase mt-2 mb-2">Events</Text>
+                {intramuralsLoading && <Text className="text-neutral-500 text-xs uppercase mt-2 mb-2">Events Loading...</Text>}
+                {!intramuralsLoading && intramurals.length > 0 && (<Text className="text-neutral-500 text-xs uppercase mt-2 mb-2">Events</Text>)}
                 <IMLeaguesCard onPress={_handleButtonPressAsync} />
-
+                <CalendarCard />
             </ScrollView>
         </View>
     )
