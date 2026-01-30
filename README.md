@@ -1,65 +1,62 @@
-# Starter Template with React Navigation
+# BevoFit
 
-This is a minimal starter template for React Native apps using Expo and React Navigation.
+A React Native mobile app for University of Texas students to view gym facilities, hours, and intramural sports information.
 
-It includes the following:
+## Overview
 
-- Example [Native Stack](https://reactnavigation.org/docs/native-stack-navigator) with a nested [Bottom Tab](https://reactnavigation.org/docs/bottom-tab-navigator)
-- Web support with [React Native for Web](https://necolas.github.io/react-native-web/)
-- TypeScript support and configured for React Navigation
-- Automatic [deep link](https://reactnavigation.org/docs/deep-linking) and [URL handling configuration](https://reactnavigation.org/docs/configuring-links)
-- Theme support [based on system appearance](https://reactnavigation.org/docs/themes/#using-the-operating-system-preferences)
-- Expo [Development Build](https://docs.expo.dev/develop/development-builds/introduction/) with [Continuous Native Generation](https://docs.expo.dev/workflow/continuous-native-generation/)
+BevoFit provides quick access to UT Recreational Sports facilities and intramural programs. Users can check gym hours, see what's open now, view facility details, and browse upcoming intramural events.
 
-## Getting Started
+## Features
 
-1. Create a new project using this template:
+- Real-time gym hours and open/closed status
+- Facility information including activities, features, and addresses
+- Interactive map of gym locations
+- Intramural sports schedules and registration information
+- Quick access to IMLeagues and scan-in portal
+- Pull-to-refresh for latest data
 
-   ```sh
-   npx create-expo-app@latest --template react-navigation/template
-   ```
+## Tech Stack
 
-2. Edit the `app.json` file to configure the `name`, `slug`, `scheme` and bundle identifiers (`ios.bundleIdentifier` and `android.bundleIdentifier`) for your app.
+- React Native with Expo
+- TypeScript
+- Supabase (database and storage)
+- React Navigation
+- NativeWind (Tailwind CSS for React Native)
+- React Native Reanimated
 
-3. Edit the `src/App.tsx` file to start working on your app.
+## Project Structure
 
-## Running the app
+```
+src/
+├── screens/
+│   ├── Home.tsx         # Main gym listing and details
+│   ├── Map.tsx          # Map view of facilities
+│   └── Intramurals.tsx  # Intramural events and schedules
+└── lib/
+    └── supabase.ts      # Supabase client configuration
+```
 
-- Install the dependencies:
+## Database Schema
 
-  ```sh
-  npm install
-  ```
+### facilities
+- Basic facility info (name, location, images)
+- Related tables: facility_hours, facility_activities, facility_features
 
-- Start the development server:
+### intramurals
+- id, category, event_name, event_fee, reg_dates, event_dates
 
-  ```sh
-  npm start
-  ```
+## Setup
 
-- Build and run iOS and Android development builds:
-
-  ```sh
-  npm run ios
-  # or
-  npm run android
-  ```
-
-- In the terminal running the development server, press `i` to open the iOS simulator, `a` to open the Android device or emulator, or `w` to open the web browser.
+1. Install dependencies: `npm install`
+2. Configure environment variables:
+   - EXPO_PUBLIC_SUPABASE_URL
+   - EXPO_PUBLIC_SUPABASE_PUBLISHABLE
+3. Run: `npx expo start`
 
 ## Notes
 
-This project uses a [development build](https://docs.expo.dev/develop/development-builds/introduction/) and cannot be run with [Expo Go](https://expo.dev/go). To run the app with Expo Go, edit the `package.json` file, remove the `expo-dev-client` package and `--dev-client` flag from the `start` script.
+- All times are displayed in Central Time (Austin, TX)
+- Facility images are stored in Supabase Storage
 
-We highly recommend using the development builds for normal development and testing.
-
-The `ios` and `android` folder are gitignored in the project by default as they are automatically generated during the build process ([Continuous Native Generation](https://docs.expo.dev/workflow/continuous-native-generation/)). This means that you should not edit these folders directly and use [config plugins](https://docs.expo.dev/config-plugins/) instead. However, if you need to edit these folders, you can remove them from the `.gitignore` file so that they are tracked by git.
-
-## Resources
-
-- [React Navigation documentation](https://reactnavigation.org/)
-- [Expo documentation](https://docs.expo.dev/)
-
----
-
-Demo assets are from [lucide.dev](https://lucide.dev/)
+## Contact
+Contact Sriram Sattiraju (sriramsattiraju07@gmail.com) for any suggestions! Thank you!

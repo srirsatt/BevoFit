@@ -30,6 +30,8 @@ export async function getIntramurals() {
     return data;
 };
 
+
+
 export function Intramurals() {
 
     const insets = useSafeAreaInsets();
