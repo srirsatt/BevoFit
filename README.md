@@ -8,7 +8,7 @@ BevoFit provides quick access to UT Recreational Sports facilities and intramura
 
 ## Screenshots
 <div style="display: flex; gap: 10px;">
-  <img src="../gymScanner/screenshots/screenshot1.png" width="250" alt="Home Screen">
+  <img src="screenshots/screenshot1.png" width="250" alt="Home Screen">
 </div>
 
 ## Features
