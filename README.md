@@ -6,6 +6,11 @@ A React Native mobile app for University of Texas students to view gym facilitie
 
 BevoFit provides quick access to UT Recreational Sports facilities and intramural programs. Users can check gym hours, see what's open now, view facility details, and browse upcoming intramural events.
 
+## Screenshots
+<div style="display: flex; gap: 10px;">
+  <img src="../gymScanner/screenshots/screenshot1.png" width="250" alt="Home Screen">
+</div>
+
 ## Features
 
 - Real-time gym hours and open/closed status
