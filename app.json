@@ -12,8 +12,6 @@
       "supportsTablet": false,
       "bundleIdentifier": "com.sriram.bevofit",
       "infoPlist": {
-        "NSCameraUsageDescription": "$(PRODUCT_NAME) needs access to your Camera.",
-        "NSMicrophoneUsageDescription": "$(PRODUCT_NAME) needs access to your Microphone.",
         "ITSAppUsesNonExemptEncryption": false
       }
     },
@@ -22,10 +20,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.sriram.bevofit",
-      "permissions": [
-        "android.permission.CAMERA"
-      ]
+      "package": "com.sriram.bevofit"
     },
     "web": {
       "favicon": "./assets/favicon.png",
@@ -38,12 +33,6 @@
         {
           "backgroundColor": "#ffffff",
           "image": "./assets/splash-icon.png"
-        }
-      ],
-      [
-        "react-native-vision-camera",
-        {
-          "cameraPermissionText": "$(PRODUCT_NAME) needs access to your Camera."
         }
       ],
       "react-native-map-link",
