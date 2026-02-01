@@ -44,6 +44,11 @@
         "projectId": "9792995b-e864-4303-85f3-62d679471dcb"
       }
     },
-    "owner": "nathos"
+    "owner": "nathos",
+    "splash": {
+      "image": "./assets/icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#000000"
+    }
   }
 }
