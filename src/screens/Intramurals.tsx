@@ -88,6 +88,7 @@ export function Intramurals() {
 
             if (isMounted) {
                 setIntramurals(initialIntramurals);
+                groupIntramuralsByCategory(initialIntramurals);
                 setIntramuralsLoading(false);
             }
 
@@ -132,11 +133,38 @@ export function Intramurals() {
 
     const CalendarCard = () => {
         return (
-            <View
-                className="w-full p-5 bg-[#111111] rounded-2xl"
-            >
-                <Text className="text-white">{intramurals.length}</Text>
-            </View>
+            <>
+                {events && Array.from(events.entries()).map(([eventString, eventArray]) => (
+                    <View
+                        key={eventString}
+                        className="w-full bg-[#1a1a1a] rounded-2xl border border-[#333333] mb-4 overflow-hidden"
+                    >
+                        {/* Category Header */}
+                        <View className="bg-[#2a2a2a] px-4 py-4 border-b border-[#333333]">
+                            <Text className="text-white text-2xl font-bold">{eventString}</Text>
+                        </View>
+
+                        {/* Table Header */}
+                        <View className="flex flex-row bg-[#222222] px-4 py-3 border-b border-[#333333]">
+                            <Text className="text-neutral-400 font-semibold text-xs flex-1 text-center">EVENT</Text>
+                            <Text className="text-neutral-400 font-semibold text-xs flex-1 text-center">EVENT DATE</Text>
+                            <Text className="text-neutral-400 font-semibold text-xs flex-1 text-center">FEE</Text>
+                        </View>
+
+                        {/* Event Rows */}
+                        {eventArray.map((event, index) => (
+                            <View
+                                key={index}
+                                className={`flex flex-row px-4 py-3.5 ${index !== eventArray.length - 1 ? 'border-b border-[#2a2a2a]' : ''}`}
+                            >
+                                <Text className="text-white text-sm flex-1 text-center">{event.event_name}</Text>
+                                <Text className="text-white text-sm flex-1 text-center">{event.event_dates}</Text>
+                                <Text className="text-white text-sm flex-1 text-center">{event.event_fee}</Text>
+                            </View>
+                        ))}
+                    </View>
+                ))}
+            </>
         )
     }
 
@@ -170,7 +198,7 @@ export function Intramurals() {
                 }}
             >
                 {intramuralsLoading && <Text className="text-neutral-500 text-xs uppercase mt-2 mb-2">Events Loading...</Text>}
-                {!intramuralsLoading && intramurals.length > 0 && (<Text className="text-neutral-500 text-xs uppercase mt-2 mb-2">Events</Text>)}
+                {!intramuralsLoading && events && events.size > 0 && (<Text className="text-neutral-500 text-xs uppercase mt-2 mb-2">Events</Text>)}
                 <IMLeaguesCard onPress={_handleButtonPressAsync} />
                 <CalendarCard />
             </ScrollView>
