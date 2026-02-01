@@ -21,6 +21,15 @@ type IntramuralStructure = {
     event_dates: string;
 };
 
+type IntramuralEvent = {
+    event_name: string;
+    reg_dates: string;
+    event_fee: string;
+    event_dates: string;
+};
+
+type eventMap = Map<string, IntramuralEvent[]>
+
 export async function getIntramurals() {
     const { data, error } = await supabase
         .from('intramurals')
@@ -33,13 +42,40 @@ export async function getIntramurals() {
 
 
 export function Intramurals() {
-
     const insets = useSafeAreaInsets();
     const intramuralInfo = "The Intramural Sports program provides competitive and recreational sports leagues, " +
         "tournaments, and special events for all students, regardless of skill level."
     const [intramurals, setIntramurals] = useState<IntramuralStructure[]>([]);
+    const [events, setEvents] = useState<eventMap>();
     const [intramuralsLoading, setIntramuralsLoading] = useState(true);
     const [intramuralsError, setIntramuralsError] = useState<string | null>(null);
+
+
+
+    function groupIntramuralsByCategory(intramurals: IntramuralStructure[]) {
+        // load the map in events
+
+        const map = new Map<string, IntramuralEvent[]>();
+
+        for (const intramural of intramurals) {
+            const event: IntramuralEvent = {
+                event_name: intramural.event_name,
+                reg_dates: intramural.reg_dates,
+                event_fee: intramural.event_fee,
+                event_dates: intramural.event_dates,
+            };
+
+
+            if (map.has(intramural.category)) {
+                map.get(intramural.category)!.push(event);
+            } else {
+                map.set(intramural.category, [event]);
+            }
+
+        }
+
+        setEvents(map);
+    }
 
 
     async function loadIntramurals(isMounted: boolean) {
@@ -64,11 +100,16 @@ export function Intramurals() {
         }
     }
 
+
     useEffect(() => {
         let isMounted = true;
         loadIntramurals(isMounted);
         return () => { isMounted = false; };
     }, []);
+
+    useEffect(() => {
+
+    })
 
 
     const IMLeaguesCard = ({ onPress }: { onPress: () => void }) => {
