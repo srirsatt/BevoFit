@@ -40,7 +40,7 @@
     "owner": "nathos",
     "splash": {
       "image": "./assets/splash.png",
-      "resizeMode": "cover"
+      "resizeMode": "contain"
     }
   }
 }
