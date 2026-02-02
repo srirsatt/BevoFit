@@ -14,7 +14,11 @@
       "deploymentTarget": "26.0",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
-        "NSLocationWhenInUsageDescription": "This app uses your location to show nearby UT Recreational Facilities and help you find the closest rec center."
+        "NSLocationWhenInUsageDescription": "This app uses your location to show nearby UT Recreational Facilities and help you find the closest rec center.",
+        "LSApplicationQueriesSchemes": [
+          "maps",
+          "comgooglemaps"
+        ]
       }
     },
     "android": {
