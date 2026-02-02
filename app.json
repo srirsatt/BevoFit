@@ -39,9 +39,8 @@
     },
     "owner": "nathos",
     "splash": {
-      "image": "./assets/icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#000000"
+      "image": "./assets/splash.png",
+      "resizeMode": "cover"
     }
   }
 }
