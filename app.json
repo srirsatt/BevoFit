@@ -13,7 +13,7 @@
       "bundleIdentifier": "com.sriram.bevofit",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
-        "NSLocationWhenInUsageDescription": "This app uses your location to show nearby UT Recreational Facilities and help you find the closest rec center.",
+        "NSLocationWhenInUseUsageDescription": "This app uses your location to show nearby UT Recreational Facilities and help you find the closest rec center.",
         "LSApplicationQueriesSchemes": [
           "maps",
           "comgooglemaps"
