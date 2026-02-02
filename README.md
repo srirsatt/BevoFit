@@ -11,6 +11,7 @@ BevoFit provides quick access to UT Recreational Sports facilities and intramura
   <img src="screenshots/screenshot1.png" width="250" alt="Home Screen">
   <img src="screenshots/screenshot2.png" width="250" alt="Map View">
   <img src="screenshots/screenshot3.png" width="250" alt="Map Modal">
+  <img src="screenshots/screenshot4.png" width="250" alt="Intramurals View">
 </div>
 
 ## Features
