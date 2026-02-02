@@ -11,6 +11,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.sriram.bevofit",
+      "deploymentTarget": "26.0",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
