@@ -28,13 +28,6 @@
     },
     "plugins": [
       "expo-asset",
-      [
-        "expo-splash-screen",
-        {
-          "backgroundColor": "#ffffff",
-          "image": "./assets/splash-icon.png"
-        }
-      ],
       "react-native-map-link",
       "expo-web-browser",
       "expo-router"
