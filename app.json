@@ -47,7 +47,7 @@
     "owner": "nathos",
     "splash": {
       "image": "./assets/splash.png",
-      "resizeMode": "contain"
+      "resizeMode": "cover"
     },
     "privacy": "public",
     "privacyPolicy": "https://srirsatt.github.io/BevoFit/privacy-policy.html"
