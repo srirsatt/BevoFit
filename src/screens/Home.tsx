@@ -1,4 +1,4 @@
-import { StyleSheet, View, Text, ScrollView, Pressable, ActivityIndicator, RefreshControl } from 'react-native';
+import { StyleSheet, View, Text, ScrollView, Pressable, ActivityIndicator, RefreshControl, TouchableOpacity } from 'react-native';
 import { Image } from 'expo-image';
 import Animated, {
   useSharedValue,
@@ -208,6 +208,7 @@ export function Home() {
   const [gymsLoading, setGymsLoading] = useState(true);
   const [gymsError, setGymsError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [tapCount, setTapCount] = useState(0); // for demo mode
 
   // Reactive selected gym state
   const [selectedGymId, setSelectedGymId] = useState<string | null>(null);
@@ -352,7 +353,18 @@ export function Home() {
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <View className="w-full px-5 mt-4">
         <Text className="text-white text-3xl">welcome to</Text>
-        <Text className="text-[#BF5700] text-6xl mt-2 font-extrabold">BevoFit</Text>
+        <TouchableOpacity
+          onPress={() => {
+            setTapCount(prev => prev + 1)
+            if (tapCount >= 4) {
+              setTapCount(0);
+              console.log("Clicked 5 times! LOL");
+            }
+          }}
+          activeOpacity={1}
+        >
+          <Text className="text-[#BF5700] text-6xl mt-2 font-extrabold">BevoFit</Text>
+        </TouchableOpacity>
       </View>
 
       <ScrollView

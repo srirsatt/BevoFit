@@ -52,7 +52,7 @@ src/
 
 ### intramurals
 - id, category, event_name, event_fee, reg_dates, event_dates
-
+=
 ## Setup
 
 1. Install dependencies: `npm install`
