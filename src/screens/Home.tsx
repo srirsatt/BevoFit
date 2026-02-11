@@ -319,7 +319,7 @@ export function Home() {
     await WebBrowser.warmUpAsync();
     let link = "https://secure.rs.utexas.edu/app/myrecsports/scan.php";
     if (isDemoMode) {
-      link = "https://srirsatt.github.io/BevoFit/privacy-policy.html";
+      link = "https://srirsatt.github.io/BevoFit/demoQR.html";
     }
     await WebBrowser.openBrowserAsync(link, {
       dismissButtonStyle: 'close',
