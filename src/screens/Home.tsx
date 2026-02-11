@@ -1,4 +1,4 @@
-import { StyleSheet, View, Text, ScrollView, Pressable, ActivityIndicator, RefreshControl, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, Text, ScrollView, Pressable, ActivityIndicator, RefreshControl, TouchableOpacity, Alert } from 'react-native';
 import { Image } from 'expo-image';
 import Animated, {
   useSharedValue,
@@ -16,6 +16,7 @@ import { supabase } from '../lib/supabase';
 import * as Haptics from 'expo-haptics';
 import { BottomSheetModal, BottomSheetScrollView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
 import { FullWindowOverlay } from 'react-native-screens';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { formatInTimeZone } from 'date-fns-tz';
 
 export async function getFacilitiesMinimal() {
@@ -209,6 +210,7 @@ export function Home() {
   const [gymsError, setGymsError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [tapCount, setTapCount] = useState(0); // for demo mode
+  const [isDemoMode, setIsDemoMode] = useState(false);
 
   // Reactive selected gym state
   const [selectedGymId, setSelectedGymId] = useState<string | null>(null);
@@ -293,6 +295,20 @@ export function Home() {
     return () => { isMounted = false; };
   }, []);
 
+  useEffect(() => {
+    const loadDemoMode = async () => {
+      try {
+        const value = await AsyncStorage.getItem('demoMode');
+        if (value === 'true') {
+          setIsDemoMode(true);
+        }
+      } catch (error) {
+        console.log("error loading demo", error);
+      }
+    };
+
+    loadDemoMode();
+  }, []);
 
   const _handleButtonPressAsync = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -304,6 +320,28 @@ export function Home() {
       enableDefaultShareMenuItem: false,
     });
   }
+
+  const enableDemoMode = async () => {
+    try {
+      await AsyncStorage.setItem('demoMode', 'true');
+      setIsDemoMode(true);
+      setTapCount(0);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } catch (error) {
+      console.log("error with demo mode", error);
+    }
+  };
+
+  const disableDemoMode = async () => {
+    try {
+      await AsyncStorage.setItem('demoMode', 'false');
+      setIsDemoMode(false);
+      setTapCount(0);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } catch (error) {
+      console.log("error in disabling demo", error);
+    }
+  };
 
   const renderBackdrop = (props: any) => (
     <BottomSheetBackdrop {...props} appearsOnIndex={0} disappearsOnIndex={-1} pressBehavior="close" />
@@ -353,18 +391,21 @@ export function Home() {
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <View className="w-full px-5 mt-4">
         <Text className="text-white text-3xl">welcome to</Text>
-        <TouchableOpacity
+        <Pressable
           onPress={() => {
-            setTapCount(prev => prev + 1)
-            if (tapCount >= 4) {
-              setTapCount(0);
-              console.log("Clicked 5 times! LOL");
-            }
+            console.log("Clicked");
+            setTapCount(prev => {
+              const newCount = prev + 1;
+              if (newCount >= 5) {
+                console.log("Clicked 5 times. LOL!");
+                return 0;
+              }
+              return newCount;
+            });
           }}
-          activeOpacity={1}
         >
           <Text className="text-[#BF5700] text-6xl mt-2 font-extrabold">BevoFit</Text>
-        </TouchableOpacity>
+        </Pressable>
       </View>
 
       <ScrollView
