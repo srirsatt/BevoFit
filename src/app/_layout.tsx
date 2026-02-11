@@ -10,6 +10,7 @@ import "../../global.css"
 import { useTensorflowModel, loadTensorflowModelOnce } from '../providers/ModelProvider';
 import BottomSheet, { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { DemoModeProvider } from '../contexts/DemoModeContext';
 
 Asset.loadAsync([
   ...NavigationAssets,
@@ -40,26 +41,28 @@ export default function TabLayout() {
   const theme = colorScheme === 'dark' ? DarkTheme : DefaultTheme
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <BottomSheetModalProvider>
-        <ModelPreloader />
-        <NativeTabs
-          tintColor='#BF5700'
-        >
-          <NativeTabs.Trigger name="index">
-            <Label>Home</Label>
-            <Icon sf="house.fill" drawable="custom_android_drawable" />
-          </NativeTabs.Trigger>
-          <NativeTabs.Trigger name="intramurals">
-            <Label>IM Sports</Label>
-            <Icon sf="sportscourt.fill" drawable="custom_android_drawable" />
-          </NativeTabs.Trigger>
-          <NativeTabs.Trigger name="map">
-            <Label>Map</Label>
-            <Icon sf="map.fill" drawable="custom_android_drawable" />
-          </NativeTabs.Trigger>
-        </NativeTabs>
-      </BottomSheetModalProvider>
-    </GestureHandlerRootView>
+    <DemoModeProvider>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <BottomSheetModalProvider>
+          <ModelPreloader />
+          <NativeTabs
+            tintColor='#BF5700'
+          >
+            <NativeTabs.Trigger name="index">
+              <Label>Home</Label>
+              <Icon sf="house.fill" drawable="custom_android_drawable" />
+            </NativeTabs.Trigger>
+            <NativeTabs.Trigger name="intramurals">
+              <Label>IM Sports</Label>
+              <Icon sf="sportscourt.fill" drawable="custom_android_drawable" />
+            </NativeTabs.Trigger>
+            <NativeTabs.Trigger name="map">
+              <Label>Map</Label>
+              <Icon sf="map.fill" drawable="custom_android_drawable" />
+            </NativeTabs.Trigger>
+          </NativeTabs>
+        </BottomSheetModalProvider>
+      </GestureHandlerRootView>
+    </DemoModeProvider>
   )
 }

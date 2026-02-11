@@ -18,6 +18,7 @@ import { BottomSheetModal, BottomSheetScrollView, BottomSheetBackdrop } from '@g
 import { FullWindowOverlay } from 'react-native-screens';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { formatInTimeZone } from 'date-fns-tz';
+import { useDemoMode } from '../contexts/DemoModeContext';
 
 export async function getFacilitiesMinimal() {
   const { data, error } = await supabase
@@ -210,7 +211,7 @@ export function Home() {
   const [gymsError, setGymsError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [tapCount, setTapCount] = useState(0); // for demo mode
-  const [isDemoMode, setIsDemoMode] = useState(false);
+  const { isDemoMode, setIsDemoMode } = useDemoMode();
 
   // Reactive selected gym state
   const [selectedGymId, setSelectedGymId] = useState<string | null>(null);
@@ -295,6 +296,7 @@ export function Home() {
     return () => { isMounted = false; };
   }, []);
 
+  /*
   useEffect(() => {
     const loadDemoMode = async () => {
       try {
@@ -309,38 +311,32 @@ export function Home() {
 
     loadDemoMode();
   }, []);
+  */
 
   const _handleButtonPressAsync = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
     await WebBrowser.warmUpAsync();
-
-    await WebBrowser.openBrowserAsync("https://secure.rs.utexas.edu/app/myrecsports/scan.php", {
+    let link = "https://secure.rs.utexas.edu/app/myrecsports/scan.php";
+    if (isDemoMode) {
+      link = "https://srirsatt.github.io/BevoFit/privacy-policy.html";
+    }
+    await WebBrowser.openBrowserAsync(link, {
       dismissButtonStyle: 'close',
       enableDefaultShareMenuItem: false,
     });
   }
 
   const enableDemoMode = async () => {
-    try {
-      await AsyncStorage.setItem('demoMode', 'true');
-      setIsDemoMode(true);
-      setTapCount(0);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    } catch (error) {
-      console.log("error with demo mode", error);
-    }
+    setIsDemoMode(true);
+    setTapCount(0);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
   };
 
   const disableDemoMode = async () => {
-    try {
-      await AsyncStorage.setItem('demoMode', 'false');
-      setIsDemoMode(false);
-      setTapCount(0);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    } catch (error) {
-      console.log("error in disabling demo", error);
-    }
+    setIsDemoMode(false);
+    setTapCount(0);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
   };
 
   const renderBackdrop = (props: any) => (
@@ -394,14 +390,45 @@ export function Home() {
         <Pressable
           onPress={() => {
             console.log("Clicked");
-            setTapCount(prev => {
-              const newCount = prev + 1;
-              if (newCount >= 5) {
-                console.log("Clicked 5 times. LOL!");
-                return 0;
+
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            setTapCount(prev => prev + 1);
+            if (tapCount >= 4) {
+              if (isDemoMode) {
+                Alert.alert(
+                  "Demo Mode",
+                  "Demo mode is currently enabled. Disable it?",
+                  [
+                    {
+                      text: "Cancel",
+                      onPress: () => setTapCount(0),
+                      style: "cancel"
+                    },
+                    {
+                      text: "Disable",
+                      onPress: disableDemoMode,
+                      style: "destructive"
+                    }
+                  ]
+                );
+              } else {
+                Alert.alert(
+                  "Demo Mode",
+                  "Enable demo mode? This shows sample data for App Store reviewers.",
+                  [
+                    {
+                      text: "Cancel",
+                      onPress: () => setTapCount(0),
+                      style: "cancel"
+                    },
+                    {
+                      text: "Enable",
+                      onPress: enableDemoMode
+                    }
+                  ]
+                );
               }
-              return newCount;
-            });
+            }
           }}
         >
           <Text className="text-[#BF5700] text-6xl mt-2 font-extrabold">BevoFit</Text>
