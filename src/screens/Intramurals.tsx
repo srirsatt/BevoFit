@@ -11,6 +11,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { supabase } from '../lib/supabase';
+import { useDemoMode } from '../contexts/DemoModeContext';
 
 type IntramuralStructure = {
     id: number;
@@ -49,6 +50,7 @@ export function Intramurals() {
     const [events, setEvents] = useState<eventMap>();
     const [intramuralsLoading, setIntramuralsLoading] = useState(true);
     const [intramuralsError, setIntramuralsError] = useState<string | null>(null);
+    const { isDemoMode } = useDemoMode();
 
 
 
@@ -173,7 +175,13 @@ export function Intramurals() {
 
         await WebBrowser.warmUpAsync();
 
-        await WebBrowser.openBrowserAsync("https://www.imleagues.com/Shibboleth.sso/Login?target=https%3a%2f%2fwww.imleagues.com%2fIntegration%2fShibboleth%2fSingleSignOn.aspx%3fType%3dSHI%26SchID%3d4e7db0d3e9cc46a581a8a8da95bb5d56&entityID=https%3a%2f%2fenterprise.login.utexas.edu%2fidp%2fshibboleth", {
+        let link = "https://www.imleagues.com/Shibboleth.sso/Login?target=https%3a%2f%2fwww.imleagues.com%2fIntegration%2fShibboleth%2fSingleSignOn.aspx%3fType%3dSHI%26SchID%3d4e7db0d3e9cc46a581a8a8da95bb5d56&entityID=https%3a%2f%2fenterprise.login.utexas.edu%2fidp%2fshibboleth";
+
+        if (isDemoMode) {
+            link = "https://www.imleagues.com/spa/intramural/4e7db0d3e9cc46a581a8a8da95bb5d56/home";
+        }
+
+        await WebBrowser.openBrowserAsync(link, {
             dismissButtonStyle: 'close',
             enableDefaultShareMenuItem: false,
         });
