@@ -2,7 +2,7 @@
 
 A React Native mobile app for University of Texas students to view gym facilities, hours, and intramural sports information.
 
-<a href="https://apps.apple.com/us/app/YOUR-APP-ID">
+<a href="https://apps.apple.com/us/app/bevofit/id6758592301">
   <img src="screenshots/Download_on_the_App_Store_Badge_US-UK_RGB_blk_092917.svg" height="60">
 </a>
 
