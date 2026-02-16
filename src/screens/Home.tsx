@@ -451,7 +451,8 @@ export function Home() {
         )}
 
         <ScanCard onPress={_handleButtonPressAsync} />
-        {gyms.map((gym) => (
+        { }
+        {gyms.sort((a, b) => Number(isFacilityOpen(b.hours).isOpen) - Number(isFacilityOpen(a.hours).isOpen)).map((gym) => (
           <Card
             gym={gym}
             key={gym.id}
