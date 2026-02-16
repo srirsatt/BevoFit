@@ -19,7 +19,7 @@
           "maps",
           "comgooglemaps"
         ],
-        "MinimumOSVersion": "26.0"
+        "MinimumOSVersion": "17.0"
       }
     },
     "android": {
