@@ -5,12 +5,13 @@ import { Asset } from 'expo-asset';
 import { createURL } from 'expo-linking';
 import * as SplashScreen from 'expo-splash-screen';
 import React, { useEffect } from 'react';
-import { useColorScheme } from 'react-native';
+import { useColorScheme, Platform } from 'react-native';
 import "../../global.css"
 import { useTensorflowModel, loadTensorflowModelOnce } from '../providers/ModelProvider';
 import BottomSheet, { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { DemoModeProvider } from '../contexts/DemoModeContext';
+import ClassicTabs from './tabs';
 
 Asset.loadAsync([
   ...NavigationAssets,
@@ -35,8 +36,24 @@ function ModelPreloader() {
   return null;
 }
 
+// ios version checker
+
+function iosMajor(): number | null {
+  if (Platform.OS !== 'ios') return null;
+  const ver = Platform.Version;
+
+  if (typeof ver === 'number') {
+    return ver;
+  }
+
+  const parsed = parseInt(String(ver), 10);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
 
 export default function TabLayout() {
+  const ver = iosMajor();
+  const useClassic = ver !== null && ver <= 18;
   const colorScheme = useColorScheme();
   const theme = colorScheme === 'dark' ? DarkTheme : DefaultTheme
 
@@ -45,22 +62,27 @@ export default function TabLayout() {
       <GestureHandlerRootView style={{ flex: 1 }}>
         <BottomSheetModalProvider>
           <ModelPreloader />
-          <NativeTabs
-            tintColor='#BF5700'
-          >
-            <NativeTabs.Trigger name="index">
-              <Label>Home</Label>
-              <Icon sf="house.fill" drawable="custom_android_drawable" />
-            </NativeTabs.Trigger>
-            <NativeTabs.Trigger name="intramurals">
-              <Label>IM Sports</Label>
-              <Icon sf="sportscourt.fill" drawable="custom_android_drawable" />
-            </NativeTabs.Trigger>
-            <NativeTabs.Trigger name="map">
-              <Label>Map</Label>
-              <Icon sf="map.fill" drawable="custom_android_drawable" />
-            </NativeTabs.Trigger>
-          </NativeTabs>
+
+          {useClassic ? (
+            <ClassicTabs />
+          ) : (
+            <NativeTabs
+              tintColor='#BF5700'
+            >
+              <NativeTabs.Trigger name="index">
+                <Label>Home</Label>
+                <Icon sf="house.fill" drawable="custom_android_drawable" />
+              </NativeTabs.Trigger>
+              <NativeTabs.Trigger name="intramurals">
+                <Label>IM Sports</Label>
+                <Icon sf="sportscourt.fill" drawable="custom_android_drawable" />
+              </NativeTabs.Trigger>
+              <NativeTabs.Trigger name="map">
+                <Label>Map</Label>
+                <Icon sf="map.fill" drawable="custom_android_drawable" />
+              </NativeTabs.Trigger>
+            </NativeTabs>
+          )}
         </BottomSheetModalProvider>
       </GestureHandlerRootView>
     </DemoModeProvider>
