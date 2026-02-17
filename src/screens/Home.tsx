@@ -190,7 +190,14 @@ export function isFacilityOpen(hours: FacilityHours | null | undefined): { isOpe
   }
 
   // 6. Parse hours and check if current time is in range
-  return isTimeInRange(currentTime, todayHours);
+  const intervals = parseIntervals(todayHours);
+  for (const interval of intervals) {
+    const result = isTimeInRange(currentTime, interval);
+
+    if (result.isOpen) return result;
+  }
+
+  return { isOpen: false, minutesLeft: null };
 }
 
 function parseIntervals(hoursStr?: string | null): string[] {
