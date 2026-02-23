@@ -53,7 +53,7 @@ function iosMajor(): number | null {
 
 export default function TabLayout() {
   const ver = iosMajor();
-  const useClassic = ver !== null && ver <= 18;
+  const useClassic = Platform.OS === 'android' || (ver !== null && ver <= 18);
   const colorScheme = useColorScheme();
   const theme = colorScheme === 'dark' ? DarkTheme : DefaultTheme
 

@@ -156,7 +156,6 @@ export function Map() {
                         coordinate={{ latitude: f.lat, longitude: f.lng }}
                         onPress={(e) => { handleMarkerPress(f) }}
                         flat={true}
-                        tracksViewChanges={false}
                         stopPropagation={true}
                         anchor={{ x: 0.5, y: 0.5 }}
                     >
