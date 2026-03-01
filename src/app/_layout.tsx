@@ -12,6 +12,7 @@ import BottomSheet, { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { DemoModeProvider } from '../contexts/DemoModeContext';
 import ClassicTabs from './tabs';
+import { House, Map, Trophy } from 'lucide-react-native';
 
 Asset.loadAsync([
   ...NavigationAssets,

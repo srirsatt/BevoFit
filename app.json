@@ -20,6 +20,15 @@
           "comgooglemaps"
         ],
         "MinimumOSVersion": "17.0"
+      },
+      "splash": {
+        "image": "./assets/splash-light.png",
+        "resizeMode": "cover",
+        "backgroundColor": "#FFFFFF",
+        "dark": {
+          "image": "./assets/splash.png",
+          "backgroundColor": "#000000"
+        }
       }
     },
     "android": {
@@ -46,8 +55,9 @@
     },
     "owner": "nathos",
     "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "cover"
+      "image": "./assets/splash-light.png",
+      "resizeMode": "cover",
+      "backgroundColor": "#FFFFFF"
     },
     "privacy": "public",
     "privacyPolicy": "https://srirsatt.github.io/BevoFit/privacy-policy.html"

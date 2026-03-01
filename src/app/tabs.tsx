@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { useColorScheme } from 'react-native';
 import Ionicons from "@expo/vector-icons/Ionicons";
 
 // import our screens
@@ -19,15 +20,19 @@ type TabParamList = {
 const Tab = createBottomTabNavigator<TabParamList>();
 
 export default function ClassicTabs() {
+    const colorScheme = useColorScheme();
+    const isDarkMode = colorScheme === 'dark';
+
     return (
         <Tab.Navigator
             screenOptions={{
                 headerShown: false,
                 animation: 'fade',
                 tabBarActiveTintColor: "#BF5700",
+                tabBarInactiveTintColor: isDarkMode ? '#888888' : '#999999',
                 tabBarStyle: {
-                    backgroundColor: '#0F0F12',
-                    borderTopColor: "#262626",
+                    backgroundColor: isDarkMode ? '#0F0F12' : '#FFFFFF',
+                    borderTopColor: isDarkMode ? '#262626' : '#E5E5E5',
                     height: 75,
                     paddingBottom: 20,
                 },
