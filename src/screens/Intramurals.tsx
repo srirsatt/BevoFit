@@ -124,7 +124,7 @@ export function Intramurals() {
                 style={rStyle}
                 onPressIn={() => { scale.value = withTiming(0.95, { duration: 80 }); }}
                 onPressOut={() => { scale.value = withTiming(1, { duration: 100 }); }}
-                className="w-full h-24 bg-[#BF5700] rounded-2xl border border-[#262626] px-5 mt-1 flex-row items-center justify-between mb-4"
+                className="w-full h-24 bg-[#BF5700] rounded-2xl border border-[#E5E5E5] dark:border-[#262626] px-5 mt-1 flex-row items-center justify-between mb-4"
                 onPress={onPress}
             >
                 <Text className="text-white pb-1 text-2xl font-bold">IMLeagues</Text>
@@ -139,29 +139,29 @@ export function Intramurals() {
                 {events && Array.from(events.entries()).map(([eventString, eventArray]) => (
                     <View
                         key={eventString}
-                        className="w-full bg-[#1a1a1a] rounded-2xl border border-[#333333] mb-4 overflow-hidden"
+                        className="w-full bg-white dark:bg-[#1a1a1a] rounded-2xl border border-[#E5E5E5] dark:border-[#262626] mb-4 overflow-hidden"
                     >
                         {/* Category Header */}
-                        <View className="bg-[#2a2a2a] px-4 py-4 border-b border-[#333333]">
-                            <Text className="text-white text-2xl font-bold">{eventString}</Text>
+                        <View className="bg-gray-100 dark:bg-[#2a2a2a] px-4 py-4 border-b border-[#E5E5E5] dark:border-[#262626]">
+                            <Text className="text-gray-900 dark:text-white text-2xl font-bold">{eventString}</Text>
                         </View>
 
                         {/* Table Header */}
-                        <View className="flex flex-row bg-[#222222] px-4 py-3 border-b border-[#333333]">
-                            <Text className="text-neutral-400 font-semibold text-xs flex-1 text-center">EVENT</Text>
-                            <Text className="text-neutral-400 font-semibold text-xs flex-1 text-center">EVENT DATE</Text>
-                            <Text className="text-neutral-400 font-semibold text-xs flex-1 text-center">FEE</Text>
+                        <View className="flex flex-row bg-gray-50 dark:bg-[#222222] px-4 py-3 border-b border-[#E5E5E5] dark:border-[#333333]">
+                            <Text className="text-gray-500 dark:text-neutral-400 font-semibold text-xs flex-1 text-center">EVENT</Text>
+                            <Text className="text-gray-500 dark:text-neutral-400 font-semibold text-xs flex-1 text-center">EVENT DATE</Text>
+                            <Text className="text-gray-500 dark:text-neutral-400 font-semibold text-xs flex-1 text-center">FEE</Text>
                         </View>
 
                         {/* Event Rows */}
                         {eventArray.map((event, index) => (
                             <View
                                 key={index}
-                                className={`flex flex-row px-4 py-3.5 ${index !== eventArray.length - 1 ? 'border-b border-[#2a2a2a]' : ''}`}
+                                className={`flex flex-row px-4 py-3.5 ${index !== eventArray.length - 1 ? 'border-b border-[#E5E5E5] dark:border-[#2a2a2a]' : ''}`}
                             >
-                                <Text className="text-white text-sm flex-1 text-center">{event.event_name}</Text>
-                                <Text className="text-white text-sm flex-1 text-center">{event.event_dates}</Text>
-                                <Text className="text-white text-sm flex-1 text-center">{event.event_fee}</Text>
+                                <Text className="text-gray-900 dark:text-white text-sm flex-1 text-center">{event.event_name}</Text>
+                                <Text className="text-gray-900 dark:text-white text-sm flex-1 text-center">{event.event_dates}</Text>
+                                <Text className="text-gray-900 dark:text-white text-sm flex-1 text-center">{event.event_fee}</Text>
                             </View>
                         ))}
                     </View>
@@ -192,12 +192,12 @@ export function Intramurals() {
         <View
             style={{
                 flex: 1,
-                backgroundColor: 'black',
                 paddingTop: insets.top,
             }}
+            className="bg-white dark:bg-black"
         >
             <View className="w-full px-5 mt-4 mb-2">
-                <Text className="text-white text-5xl mt-2 font-extrabold">Intramurals</Text>
+                <Text className="text-gray-900 dark:text-white text-5xl mt-2 font-extrabold">Intramurals</Text>
             </View>
             <ScrollView
                 className="flex-1 px-5"
@@ -205,8 +205,8 @@ export function Intramurals() {
                     paddingBottom: insets.bottom + 55
                 }}
             >
-                {intramuralsLoading && <Text className="text-neutral-500 text-xs uppercase mt-2 mb-2">Events Loading...</Text>}
-                {!intramuralsLoading && events && events.size > 0 && (<Text className="text-neutral-500 text-xs uppercase mt-2 mb-2">Events</Text>)}
+                {intramuralsLoading && <Text className="text-gray-500 dark:text-neutral-500 text-xs uppercase mt-2 mb-2">Events Loading...</Text>}
+                {!intramuralsLoading && events && events.size > 0 && (<Text className="text-gray-500 dark:text-neutral-500 text-xs uppercase mt-2 mb-2">Events</Text>)}
                 <IMLeaguesCard onPress={_handleButtonPressAsync} />
                 <CalendarCard />
             </ScrollView>

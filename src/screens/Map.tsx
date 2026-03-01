@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import MapView, { Marker, Callout } from 'react-native-maps';
 import { FullWindowOverlay } from 'react-native-screens';
-import { StyleSheet, View, Text, Pressable } from 'react-native';
+import { StyleSheet, View, Text, Pressable, useColorScheme } from 'react-native';
 import { supabase } from '../lib/supabase';
 import { BottomSheetModal, BottomSheetView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
 import * as Haptics from 'expo-haptics';
@@ -42,6 +42,8 @@ export function Map() {
     const [pins, setPins] = useState<FacilityMarker[]>([]);
     // empty arr to start
     const [loading, setLoading] = useState(true);
+    const colorScheme = useColorScheme();
+    const isDarkMode = colorScheme === 'dark';
 
     // variables for bottomsheetmodal
     const [selectedFacilityId, setSelectedFacilityId] = useState<string | null>(null);
@@ -182,20 +184,20 @@ export function Map() {
                     onChange={handleSheetChanges}
                     onDismiss={onDismiss}
                     backdropComponent={renderBackdrop}
-                    backgroundStyle={{ backgroundColor: '#111111', borderTopLeftRadius: 20, borderTopRightRadius: 20 }}
-                    handleIndicatorStyle={{ backgroundColor: 'white', width: '10%', height: 5 }}
+                    backgroundStyle={{ backgroundColor: isDarkMode ? '#111111' : '#FFFFFF', borderTopLeftRadius: 20, borderTopRightRadius: 20 }}
+                    handleIndicatorStyle={{ backgroundColor: isDarkMode ? 'white' : '#D4D4D4', width: '10%', height: 5 }}
                     enableDynamicSizing={true}
                     maxDynamicContentSize={600}
                 >
                     <BottomSheetView>
                         <View className="px-6">
-                            <Text className="text-white text-3xl mt-1 font-bold">{selectedFacility?.name}</Text>
+                            <Text className="text-gray-900 dark:text-white text-3xl mt-1 font-bold">{selectedFacility?.name}</Text>
                             <View className="flex-row items-center mt-2">
                                 <Ionicons name="location-sharp" size={14} color="#9CAEAF" />
-                                <Text className="text-gray-400 text-sm"> {selectedFacility?.addr}</Text>
+                                <Text className="text-gray-500 dark:text-gray-400 text-sm"> {selectedFacility?.addr}</Text>
                             </View>
-                            <View className="h-[1px] w-full bg-[#262626] mt-5"></View>
-                            <Text className="text-white text-xl mt-3">{selectedFacility?.general_info}</Text>
+                            <View className="h-[1px] w-full bg-[#E5E5E5] dark:bg-[#262626] mt-5"></View>
+                            <Text className="text-gray-900 dark:text-white text-xl mt-3">{selectedFacility?.general_info}</Text>
                             <AnimatedPressable
                                 style={directionsStyle}
                                 className="w-full bg-[#BF5700] h-[49px] mt-5 rounded-xl items-center justify-center"
@@ -207,12 +209,12 @@ export function Map() {
                             </AnimatedPressable>
                             <AnimatedPressable
                                 style={closeStyle}
-                                className="w-full bg-[#262626] h-[49px] mt-3 mb-8 rounded-xl items-center justify-center"
+                                className="w-full bg-gray-200 dark:bg-[#262626] h-[49px] mt-3 mb-8 rounded-xl items-center justify-center"
                                 onPressIn={() => { closeScale.value = withTiming(0.95, { duration: 80 }); }}
                                 onPressOut={() => { closeScale.value = withTiming(1, { duration: 100 }); }}
                                 onPress={() => handleClose()}
                             >
-                                <Text className="text-white font-bold text-lg ">Close</Text>
+                                <Text className="text-gray-900 dark:text-white font-bold text-lg ">Close</Text>
                             </AnimatedPressable>
                         </View>
                     </BottomSheetView>

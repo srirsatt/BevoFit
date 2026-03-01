@@ -1,4 +1,4 @@
-import { StyleSheet, View, Text, ScrollView, Pressable, ActivityIndicator, RefreshControl, TouchableOpacity, Alert } from 'react-native';
+import { StyleSheet, View, Text, ScrollView, Pressable, ActivityIndicator, RefreshControl, TouchableOpacity, Alert, Appearance, useColorScheme } from 'react-native';
 import { Image } from 'expo-image';
 import Animated, {
   useSharedValue,
@@ -228,6 +228,11 @@ export function Home() {
   const isPresentingRef = useRef(false);
   const snapPoints = useMemo(() => ['90%'], []);
 
+  // setup a state variable for on device light/dark
+
+  const colorScheme = useColorScheme();
+  const isDarkMode = colorScheme === 'dark';
+
 
   const handleModalPress = useCallback((gym: FacilityWithHours) => {
     if (isPresentingRef.current) return;
@@ -370,12 +375,12 @@ export function Home() {
         border
       "
         style={{
-          backgroundColor: '#15161A',               // softer than #1A1A1A
-          borderColor: 'rgba(255,255,255,0.08)',   // subtle border
+          backgroundColor: isDarkMode ? '#15161A' : '#F3F4F6',
+          borderColor: isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
         }}
       >
         <Text
-          className="text-white text-center font-semibold uppercase"
+          className="text-gray-900 dark:text-white text-center font-semibold uppercase"
           style={{
             fontSize: isLong ? 10 : 11,
             letterSpacing: 0.4,
@@ -391,9 +396,9 @@ export function Home() {
   };
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View style={[styles.container, { paddingTop: insets.top }]} className="bg-gray-50 dark:bg-black">
       <View className="w-full px-5 mt-4">
-        <Text className="text-white text-3xl">welcome to</Text>
+        <Text className="text-black dark:text-white text-3xl">welcome to</Text>
         <Pressable
           onPress={() => {
             console.log("Clicked");
@@ -451,10 +456,10 @@ export function Home() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        {gymsLoading && <Text className="text-neutral-500 text-xs uppercase mt-2 mb-2">Gyms Loading...</Text>}
+        {gymsLoading && <Text className="text-gray-500 dark:text-neutral-500 text-xs uppercase mt-2 mb-2">Gyms Loading...</Text>}
 
         {!gymsLoading && gyms.length > 0 && (
-          <Text className="text-neutral-500 text-xs uppercase mt-2 mb-2">Gyms</Text>
+          <Text className="text-gray-500 dark:text-neutral-500 text-xs uppercase mt-2 mb-2">Gyms</Text>
         )}
 
         <ScanCard onPress={_handleButtonPressAsync} />
@@ -482,13 +487,13 @@ export function Home() {
           onChange={handleSheetChanges}
           onDismiss={onDismiss}
           backdropComponent={renderBackdrop}
-          backgroundStyle={{ backgroundColor: '#111111', borderTopLeftRadius: 20, borderTopRightRadius: 20 }}
-          handleIndicatorStyle={{ backgroundColor: 'white', width: '10%', height: 5 }}
+          backgroundStyle={{ backgroundColor: isDarkMode ? '#111111' : '#FFFFFF', borderTopLeftRadius: 20, borderTopRightRadius: 20 }}
+          handleIndicatorStyle={{ backgroundColor: isDarkMode ? 'white' : '#D4D4D4', width: '10%', height: 5 }}
           enableDynamicSizing={false}
         >
           <BottomSheetScrollView>
             <View className="px-7 pt-3">
-              <View className="w-full h-[220px] rounded-2xl overflow-hidden bg-neutral-900 border border-[#262626] items-center justify-center">
+              <View className="w-full h-[220px] rounded-2xl overflow-hidden bg-gray-100 dark:bg-neutral-900 border border-[#E5E5E5] dark:border-[#262626] items-center justify-center">
                 <Image
                   source={selectedGym?.hero_image_url}
                   style={{ width: '100%', height: '100%' }}
@@ -496,42 +501,42 @@ export function Home() {
                 />
               </View>
               <ScrollView>
-                <Text className="text-white text-4xl mt-4 font-bold">{selectedGym?.name}</Text>
+                <Text className="text-gray-900 dark:text-white text-4xl mt-4 font-bold">{selectedGym?.name}</Text>
                 <View className="flex-row items-center mt-1">
                   <Ionicons name="time-outline" size={15} color="#BF5700" />
                   <Text className="text-[#BF5700] text-lg font-bold"> {isFacilityOpen(selectedGym?.hours).isOpen ? "Open" : "Closed"}</Text>
                 </View>
                 <View className="flex-row items-center mt-1">
                   <Ionicons name="location-sharp" size={14} color="#9CAEAF" />
-                  <Text className="text-gray-400 text-sm"> {selectedGym?.addr}</Text>
+                  <Text className="text-gray-500 dark:text-gray-400 text-sm"> {selectedGym?.addr}</Text>
                 </View>
-                <View className="h-[1px] w-full bg-[#262626] mt-4"></View>
-                <Text className="text-white text-xl mt-3">{selectedGym?.general_info}</Text>
-                <View className="bg-[#262626] w-full rounded-2xl overflow-hidden mt-5">
-                  <Text className="text-white text-2xl font-bold pt-3 px-4">
+                <View className="h-[1px] w-full bg-[#E5E5E5] dark:bg-[#262626] mt-4"></View>
+                <Text className="text-gray-900 dark:text-white text-xl mt-3">{selectedGym?.general_info}</Text>
+                <View className="bg-gray-100 dark:bg-[#262626] w-full rounded-2xl overflow-hidden mt-5">
+                  <Text className="text-gray-900 dark:text-white text-2xl font-bold pt-3 px-4">
                     Regular Facility Hours
                   </Text>
 
-                  <HoursRow label="M–Th" value={selectedGym?.hours?.mon} />
-                  <View className="h-[1px] bg-white/10 mx-5" />
+                  <HoursRow label="M–Th" value={selectedGym?.hours?.mon} isDarkMode={isDarkMode} />
+                  <View className="h-[1px] bg-black/10 dark:bg-white/10 mx-5" />
 
-                  <HoursRow label="Fri" value={selectedGym?.hours?.fri} />
-                  <View className="h-[1px] bg-white/10 mx-5" />
+                  <HoursRow label="Fri" value={selectedGym?.hours?.fri} isDarkMode={isDarkMode} />
+                  <View className="h-[1px] bg-black/10 dark:bg-white/10 mx-5" />
 
-                  <HoursRow label="Sat" value={selectedGym?.hours?.sat} />
-                  <View className="h-[1px] bg-white/10 mx-5" />
+                  <HoursRow label="Sat" value={selectedGym?.hours?.sat} isDarkMode={isDarkMode} />
+                  <View className="h-[1px] bg-black/10 dark:bg-white/10 mx-5" />
 
-                  <HoursRow label="Sun" value={selectedGym?.hours?.sun} />
+                  <HoursRow label="Sun" value={selectedGym?.hours?.sun} isDarkMode={isDarkMode} />
                 </View>
 
-                <Text className="text-white text-2xl mt-4 font-bold">Facility Activities</Text>
+                <Text className="text-gray-900 dark:text-white text-2xl mt-4 font-bold">Facility Activities</Text>
                 <View className="flex-row flex-wrap justify-between mt-2">
                   {selectedGym?.facility_activities?.map((item, index) => (
                     <ActivityChip key={`${item}-${index}`} label={item} />
                   ))}
                 </View>
 
-                <Text className="text-white text-2xl font-bold mt-1">Features</Text>
+                <Text className="text-gray-900 dark:text-white text-2xl font-bold mt-1">Features</Text>
                 <View className="flex-row flex-wrap justify-between mt-2">
                   {selectedGym?.facility_features?.map((item, index) => (
                     <ActivityChip key={`${item}-${index}`} label={item} />
@@ -577,17 +582,17 @@ const Card = ({ gym, onPress }: { gym: FacilityWithHours; onPress: (gym: Facilit
       style={rStyle}
       onPressIn={() => { scale.value = withTiming(0.95, { duration: 80 }); }}
       onPressOut={() => { scale.value = withTiming(1, { duration: 100 }); }}
-      className="w-full min-h-[80px] bg-[#111111] rounded-2xl border border-[#262626] px-4 mt-1 flex-row items-center justify-between mb-4"
+      className="w-full min-h-[80px] bg-white dark:bg-[#111111] rounded-2xl border border-[#E5E5E5] dark:border-[#262626] px-4 mt-1 flex-row items-center justify-between mb-4"
       onPress={() => onPress(gym)}
     >
       <View>
-        <Text className="text-white pb-1 text-xl font-bold">{gym.name}</Text>
+        <Text className="text-black dark:text-white pb-1 text-xl font-bold">{gym.name}</Text>
         <View className="flex-row items-center" >
           <View className="w-2 h-2 rounded-full mr-1.5" style={{ backgroundColor: isOpen ? '#2FBF71' : '#E5533D' }} />
-          <Text className="text-neutral-400 text-sm font-semibold">
+          <Text className="text-black dark:text-neutral-400 text-sm font-semibold">
             {isOpen ? 'Open ' : 'Closed '}
           </Text>
-          <Text className="text-neutral-400 text-sm">
+          <Text className="text-black dark:text-neutral-400 text-sm">
             {isOpen && timeDisplay ? `for ${timeDisplay}` : ''}
           </Text>
         </View>
@@ -607,7 +612,7 @@ const ScanCard = ({ onPress }: { onPress: () => void }) => {
       style={rStyle}
       onPressIn={() => { scale.value = withTiming(0.95, { duration: 80 }); }}
       onPressOut={() => { scale.value = withTiming(1, { duration: 100 }); }}
-      className="w-full h-24 bg-[#BF5700] rounded-2xl border border-[#262626] px-5 mt-1 flex-row items-center justify-between mb-4"
+      className="w-full h-24 bg-[#BF5700] rounded-2xl border border-[#E5E5E5] dark:border-[#262626] px-5 mt-1 flex-row items-center justify-between mb-4"
       onPress={onPress}
     >
       <Text className="text-white pb-1 text-2xl font-bold">Scan In</Text>
@@ -616,14 +621,14 @@ const ScanCard = ({ onPress }: { onPress: () => void }) => {
   );
 }
 
-const HoursRow = ({ label, value }: { label: string; value?: string | null }) => {
+const HoursRow = ({ label, value, isDarkMode }: { label: string; value?: string | null; isDarkMode: boolean }) => {
   const intervals = parseIntervals(value);
   const isClosed = intervals.length === 0;
 
   return (
     <View className="flex-row justify-between px-5 py-3">
       {/* Left: day label */}
-      <Text className="text-white font-bold w-16">{label}</Text>
+      <Text className="text-gray-900 dark:text-white font-bold w-16">{label}</Text>
 
       {/* Right: stacked intervals */}
       <View className="flex-1 items-end">
@@ -633,12 +638,12 @@ const HoursRow = ({ label, value }: { label: string; value?: string | null }) =>
               paddingHorizontal: 10,
               paddingVertical: 4,
               borderRadius: 999,
-              backgroundColor: 'rgba(255,255,255,0.08)',
+              backgroundColor: isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
               borderWidth: 1,
-              borderColor: 'rgba(255,255,255,0.10)',
+              borderColor: isDarkMode ? 'rgba(255,255,255,0.10)' : 'rgba(0,0,0,0.08)',
             }}
           >
-            <Text className="text-white text-xs" style={{ opacity: 0.85 }}>
+            <Text className="text-gray-900 dark:text-white text-xs" style={{ opacity: 0.85 }}>
               Closed
             </Text>
           </View>
@@ -646,7 +651,7 @@ const HoursRow = ({ label, value }: { label: string; value?: string | null }) =>
           intervals.map((t, i) => (
             <Text
               key={`${label}-${i}`}
-              className="text-white"
+              className="text-gray-900 dark:text-white"
               style={{
                 opacity: 0.95,
                 marginTop: i === 0 ? 0 : 6, // spacing between stacked lines
@@ -662,7 +667,7 @@ const HoursRow = ({ label, value }: { label: string; value?: string | null }) =>
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: 'black' },
+  container: { flex: 1 },
 });
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
