@@ -260,6 +260,27 @@ async function upsertBusynessreport(facilityId: string, deviceId: string, level:
   }
 }
 
+// fetch busyness from supabase for current ratings (mean)
+async function getFacilityBusyness(facilityId: string): Promise<number | null> {
+  const thirtyMinAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+
+  const { data, error } = await supabase
+    .from('busyness_reports')
+    .select('busyness')
+    .eq('facility_id', facilityId)
+    .gte('timestamp', thirtyMinAgo);
+
+  if (error) {
+    console.error('Error fetching busyness:', error);
+    return null;
+  }
+
+  if (!data || data.length === 0) return null;
+
+  const avg = data.reduce((sum, report) => sum + report.busyness, 0) / data.length;
+  return Math.round(avg);
+}
+
 
 export function Home() {
   const [gyms, setGyms] = useState<FacilityWithHours[]>([]);
@@ -281,6 +302,7 @@ export function Home() {
   const snapPoints = useMemo(() => ['90%'], []);
 
   const [deviceId, setDeviceId] = useState<string | null>(null);
+  const [communityBusyness, setCommunityBusyness] = useState<number | null>(null);
 
   // setup a state variable for on device light/dark
 
@@ -301,6 +323,10 @@ export function Home() {
     // Load saved report AFTER modal is shown
     const saved = await getSavedReport(gym.id);
     if (saved !== null) setSelectedBusyness(saved);
+
+    // Fetch community busyness from Supabase
+    const community = await getFacilityBusyness(gym.id);
+    setCommunityBusyness(community);
   }, []);
 
   const onDismiss = useCallback(() => {
@@ -570,7 +596,24 @@ export function Home() {
                 <Text className="text-gray-900 dark:text-white text-4xl mt-4 font-bold">{selectedGym?.name}</Text>
                 <View className="flex-row items-center mt-1">
                   <Ionicons name="time-outline" size={15} color="#BF5700" />
-                  <Text className="text-[#BF5700] text-lg font-bold"> {isFacilityOpen(selectedGym?.hours).isOpen ? "Open" : "Closed"}</Text>
+                  <Text className="text-[#BF5700] text-lg font-bold">
+                    {' '}{isFacilityOpen(selectedGym?.hours).isOpen ? "Open" : "Closed"}
+                    {communityBusyness !== null && (
+                      <Text
+                        style={{
+                          color: communityBusyness <= 1 ? '#2FBF71'
+                            : communityBusyness <= 2 ? '#F5A623'
+                              : communityBusyness <= 3 ? '#E87040'
+                                : '#E5533D',
+                        }}
+                      >
+                        {' · ' + (communityBusyness <= 1 ? 'Not Busy'
+                          : communityBusyness <= 2 ? 'Moderately Busy'
+                            : communityBusyness <= 3 ? 'Busy'
+                              : 'Extremely Busy')}
+                      </Text>
+                    )}
+                  </Text>
                 </View>
                 <View className="flex-row items-center mt-1">
                   <Ionicons name="location-sharp" size={14} color="#9CAEAF" />
