@@ -154,39 +154,27 @@ function getTodayKey(): string {
 }
 
 // check today's on device reports
-async function getTodayReports(): Promise<{ count: number, reports: Record<string, number> }> {
-
+async function getTodayReports(): Promise<Record<string, number>> {
   const key = getTodayKey();
   const raw = await AsyncStorage.getItem(key);
-  if (!raw) return { count: 0, reports: {} };
-
+  if (!raw) return {};
   return JSON.parse(raw);
 }
 
 async function saveBusynessReport(facilityId: string, level: number): Promise<boolean> {
-  const data = await getTodayReports();
+  const reports = await getTodayReports();
 
-  const isUpdate = facilityId in data.reports;
+  // Save (one report per gym, overwrites if already exists)
+  reports[facilityId] = level;
 
-  // check limit
-  if (!isUpdate && data.count >= 2) {
-    return false;
-  }
-
-  // otherwise save
-  data.reports[facilityId] = level;
-  if (!isUpdate) {
-    data.count++;
-  }
-
-  await AsyncStorage.setItem(getTodayKey(), JSON.stringify(data));
+  await AsyncStorage.setItem(getTodayKey(), JSON.stringify(reports));
   return true;
 }
 
 // check if a gym has a saved report
 async function getSavedReport(facilityId: string): Promise<number | null> {
-  const data = await getTodayReports();
-  return data.reports[facilityId] ?? null;
+  const reports = await getTodayReports();
+  return reports[facilityId] ?? null;
 }
 
 // Main function to check if facility is currently open
@@ -255,6 +243,23 @@ function parseIntervals(hoursStr?: string | null): string[] {
     .filter(Boolean);
 }
 
+async function upsertBusynessreport(facilityId: string, deviceId: string, level: number) {
+  const { error } = await supabase
+    .from('busyness_reports')
+    .upsert({
+      facility_id: facilityId,
+      device_id: deviceId,
+      busyness: level,
+      timestamp: new Date().toISOString(),
+    },
+      { onConflict: 'facility_id, device_id' }
+    );
+
+  if (error) {
+    console.error('Error upserting busyness:', error);
+  }
+}
+
 
 export function Home() {
   const [gyms, setGyms] = useState<FacilityWithHours[]>([]);
@@ -288,12 +293,14 @@ export function Home() {
 
     isPresentingRef.current = true;
     setSelectedGymId(gym.id);
-
-    const saved = await getSavedReport(gym.id);
-    setSelectedBusyness(saved);
+    setSelectedBusyness(null);
 
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     sheetRef.current?.present();
+
+    // Load saved report AFTER modal is shown
+    const saved = await getSavedReport(gym.id);
+    if (saved !== null) setSelectedBusyness(saved);
   }, []);
 
   const onDismiss = useCallback(() => {
@@ -581,6 +588,7 @@ export function Home() {
                   ].map((option) => (
                     <Pressable
                       key={option.level}
+                      disabled={selectedBusyness !== null}
                       onPress={async () => {
                         if (!selectedGym) return;
                         const success = await saveBusynessReport(selectedGym.id, option.level);
@@ -589,6 +597,9 @@ export function Home() {
                           setSelectedBusyness(option.level);
 
                           // upsert to Supabase
+                          if (deviceId) {
+                            upsertBusynessreport(selectedGym.id, deviceId, option.level);
+                          }
                         } else {
                           Alert.alert("limit reached bud");
                         }
@@ -597,6 +608,7 @@ export function Home() {
                       className="items-center rounded-xl py-2 px-1"
                       style={{
                         width: '23%',
+                        opacity: selectedBusyness !== null && selectedBusyness !== option.level ? 0.35 : 1,
                         backgroundColor: selectedBusyness === option.level
                           ? option.color + '20'
                           : isDarkMode ? '#1A1A1A' : '#F3F4F6',
