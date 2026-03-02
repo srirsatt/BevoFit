@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { useColorScheme } from 'react-native';
+import { Pressable, useColorScheme } from 'react-native';
 import Ionicons from "@expo/vector-icons/Ionicons";
 
 // import our screens

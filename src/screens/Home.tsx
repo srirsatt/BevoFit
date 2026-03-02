@@ -19,6 +19,7 @@ import { FullWindowOverlay } from 'react-native-screens';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { formatInTimeZone } from 'date-fns-tz';
 import { useDemoMode } from '../contexts/DemoModeContext';
+import * as Application from 'expo-application';
 
 export async function getFacilitiesMinimal() {
   const { data, error } = await supabase
@@ -145,6 +146,49 @@ function isTimeInRange(currentTime: string, hoursString: string): { isOpen: bool
   }
 }
 
+// helper function for today's reports from AsyncStor
+
+function getTodayKey(): string {
+  const today = new Date().toISOString().split('T')[0];
+  return `busyness_${today}`;
+}
+
+// check today's on device reports
+async function getTodayReports(): Promise<{ count: number, reports: Record<string, number> }> {
+
+  const key = getTodayKey();
+  const raw = await AsyncStorage.getItem(key);
+  if (!raw) return { count: 0, reports: {} };
+
+  return JSON.parse(raw);
+}
+
+async function saveBusynessReport(facilityId: string, level: number): Promise<boolean> {
+  const data = await getTodayReports();
+
+  const isUpdate = facilityId in data.reports;
+
+  // check limit
+  if (!isUpdate && data.count >= 2) {
+    return false;
+  }
+
+  // otherwise save
+  data.reports[facilityId] = level;
+  if (!isUpdate) {
+    data.count++;
+  }
+
+  await AsyncStorage.setItem(getTodayKey(), JSON.stringify(data));
+  return true;
+}
+
+// check if a gym has a saved report
+async function getSavedReport(facilityId: string): Promise<number | null> {
+  const data = await getTodayReports();
+  return data.reports[facilityId] ?? null;
+}
+
 // Main function to check if facility is currently open
 export function isFacilityOpen(hours: FacilityHours | null | undefined): { isOpen: boolean, minutesLeft: number | null } {
   if (!hours) return { isOpen: false, minutesLeft: null };
@@ -231,18 +275,22 @@ export function Home() {
   const isPresentingRef = useRef(false);
   const snapPoints = useMemo(() => ['90%'], []);
 
+  const [deviceId, setDeviceId] = useState<string | null>(null);
+
   // setup a state variable for on device light/dark
 
   const colorScheme = useColorScheme();
   const isDarkMode = colorScheme === 'dark';
 
 
-  const handleModalPress = useCallback((gym: FacilityWithHours) => {
+  const handleModalPress = useCallback(async (gym: FacilityWithHours) => {
     if (isPresentingRef.current) return;
 
     isPresentingRef.current = true;
     setSelectedGymId(gym.id);
-    setSelectedBusyness(null);
+
+    const saved = await getSavedReport(gym.id);
+    setSelectedBusyness(saved);
 
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     sheetRef.current?.present();
@@ -308,7 +356,14 @@ export function Home() {
 
   useEffect(() => {
     let isMounted = true;
-    loadGyms(isMounted);
+    async function init() {
+      const deviceId = await Application.getIosIdForVendorAsync();
+      if (isMounted) {
+        setDeviceId(deviceId);
+        loadGyms(isMounted);
+      }
+    }
+    init();
     return () => { isMounted = false; };
   }, []);
 
@@ -516,19 +571,28 @@ export function Home() {
                 </View>
                 <View className="h-[1px] w-full bg-[#E5E5E5] dark:bg-[#262626] mt-4"></View>
                 {/* Busyness Reporting UI */}
-                <Text className="text-gray-900 dark:text-white text-lg font-bold mt-4">How Packed?</Text>
+                <Text className="text-gray-900 dark:text-white text-lg font-bold mt-4">Crowd?</Text>
                 <View className="flex-row justify-between mt-2">
                   {[
-                    { level: 1, emoji: '😌', label: 'Not Busy', color: '#2FBF71' },
-                    { level: 2, emoji: '🙂', label: 'Slightly', color: '#F5A623' },
-                    { level: 3, emoji: '😅', label: 'Busy', color: '#E87040' },
-                    { level: 4, emoji: '🥵', label: 'Packed', color: '#E5533D' },
+                    { level: 1, emoji: '😁', label: 'Empty', color: '#2FBF71' },
+                    { level: 2, emoji: '🙂', label: 'Moderate', color: '#F5A623' },
+                    { level: 3, emoji: '😐', label: 'Busy', color: '#E87040' },
+                    { level: 4, emoji: '😔', label: 'Packed', color: '#E5533D' },
                   ].map((option) => (
                     <Pressable
                       key={option.level}
-                      onPress={() => {
-                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                        setSelectedBusyness(option.level);
+                      onPress={async () => {
+                        if (!selectedGym) return;
+                        const success = await saveBusynessReport(selectedGym.id, option.level);
+                        if (success) {
+                          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                          setSelectedBusyness(option.level);
+
+                          // upsert to Supabase
+                        } else {
+                          Alert.alert("limit reached bud");
+                        }
+
                       }}
                       className="items-center rounded-xl py-2 px-1"
                       style={{
