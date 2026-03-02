@@ -27,6 +27,7 @@
         "backgroundColor": "#FFFFFF",
         "dark": {
           "image": "./assets/splash.png",
+          "resizeMode": "cover",
           "backgroundColor": "#000000"
         }
       }
@@ -54,11 +55,6 @@
       }
     },
     "owner": "nathos",
-    "splash": {
-      "image": "./assets/splash-light.png",
-      "resizeMode": "cover",
-      "backgroundColor": "#FFFFFF"
-    },
     "privacy": "public",
     "privacyPolicy": "https://srirsatt.github.io/BevoFit/privacy-policy.html"
   }

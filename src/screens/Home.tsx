@@ -224,6 +224,9 @@ export function Home() {
   const [selectedGymId, setSelectedGymId] = useState<string | null>(null);
   const selectedGym = useMemo(() => gyms.find(g => g.id === selectedGymId), [gyms, selectedGymId]);
 
+  // Busyness reporting
+  const [selectedBusyness, setSelectedBusyness] = useState<number | null>(null);
+
   const sheetRef = useRef<BottomSheetModal>(null);
   const isPresentingRef = useRef(false);
   const snapPoints = useMemo(() => ['90%'], []);
@@ -239,6 +242,7 @@ export function Home() {
 
     isPresentingRef.current = true;
     setSelectedGymId(gym.id);
+    setSelectedBusyness(null);
 
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     sheetRef.current?.present();
@@ -511,6 +515,53 @@ export function Home() {
                   <Text className="text-gray-500 dark:text-gray-400 text-sm"> {selectedGym?.addr}</Text>
                 </View>
                 <View className="h-[1px] w-full bg-[#E5E5E5] dark:bg-[#262626] mt-4"></View>
+                {/* Busyness Reporting UI */}
+                <Text className="text-gray-900 dark:text-white text-lg font-bold mt-4">How Packed?</Text>
+                <View className="flex-row justify-between mt-2">
+                  {[
+                    { level: 1, emoji: '😌', label: 'Not Busy', color: '#2FBF71' },
+                    { level: 2, emoji: '🙂', label: 'Slightly', color: '#F5A623' },
+                    { level: 3, emoji: '😅', label: 'Busy', color: '#E87040' },
+                    { level: 4, emoji: '🥵', label: 'Packed', color: '#E5533D' },
+                  ].map((option) => (
+                    <Pressable
+                      key={option.level}
+                      onPress={() => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                        setSelectedBusyness(option.level);
+                      }}
+                      className="items-center rounded-xl py-2 px-1"
+                      style={{
+                        width: '23%',
+                        backgroundColor: selectedBusyness === option.level
+                          ? option.color + '20'
+                          : isDarkMode ? '#1A1A1A' : '#F3F4F6',
+                        borderWidth: selectedBusyness === option.level ? 1.5 : 1,
+                        borderColor: selectedBusyness === option.level
+                          ? option.color
+                          : isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
+                      }}
+                    >
+                      <Text style={{ fontSize: 22 }}>{option.emoji}</Text>
+                      <Text
+                        className="text-center font-semibold mt-1"
+                        style={{
+                          fontSize: 10,
+                          color: selectedBusyness === option.level
+                            ? option.color
+                            : isDarkMode ? '#AAAAAA' : '#666666',
+                        }}
+                      >
+                        {option.label}
+                      </Text>
+                    </Pressable>
+                  ))}
+                </View>
+                {selectedBusyness && (
+                  <Text className="text-gray-500 dark:text-neutral-500 text-xs mt-2">Thanks for reporting!</Text>
+                )}
+                <View className="h-[1px] w-full bg-[#E5E5E5] dark:bg-[#262626] mt-4"></View>
+
                 <Text className="text-gray-900 dark:text-white text-xl mt-3">{selectedGym?.general_info}</Text>
                 <View className="bg-gray-100 dark:bg-[#262626] w-full rounded-2xl overflow-hidden mt-5">
                   <Text className="text-gray-900 dark:text-white text-2xl font-bold pt-3 px-4">
