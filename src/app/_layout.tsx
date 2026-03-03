@@ -6,6 +6,7 @@ import { createURL } from 'expo-linking';
 import * as SplashScreen from 'expo-splash-screen';
 import React, { useEffect } from 'react';
 import { useColorScheme, Platform } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import "../../global.css"
 import { useTensorflowModel, loadTensorflowModelOnce } from '../providers/ModelProvider';
 import BottomSheet, { BottomSheetModalProvider } from '@gorhom/bottom-sheet';

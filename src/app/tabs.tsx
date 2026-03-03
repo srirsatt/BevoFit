@@ -1,8 +1,9 @@
 // tabs for classic tabs -> versions older than ios 26
 
 import React from 'react';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Pressable, useColorScheme } from 'react-native';
+import { createBottomTabNavigator, BottomTabBarButtonProps } from '@react-navigation/bottom-tabs';
+import { Pressable, useColorScheme, GestureResponderEvent } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import Ionicons from "@expo/vector-icons/Ionicons";
 
 // import our screens
@@ -18,6 +19,14 @@ type TabParamList = {
 };
 
 const Tab = createBottomTabNavigator<TabParamList>();
+
+function HapticTabButton({ onPress, ref: _ref, ...rest }: BottomTabBarButtonProps) {
+    const handlePress = (e: GestureResponderEvent) => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        onPress?.(e);
+    };
+    return <Pressable onPress={handlePress} {...rest} />;
+}
 
 export default function ClassicTabs() {
     const colorScheme = useColorScheme();
@@ -38,7 +47,8 @@ export default function ClassicTabs() {
                 },
                 tabBarLabelStyle: {
                     marginTop: 3,
-                }
+                },
+                tabBarButton: (props) => <HapticTabButton {...props} />,
             }}
         >
             <Tab.Screen
