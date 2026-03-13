@@ -1,6 +1,6 @@
 import { StyleSheet, View, TouchableOpacity, Text, Pressable, StatusBar, useWindowDimensions } from 'react-native';
 import { useCameraPermission, useCameraDevice, Camera } from 'react-native-vision-camera';
-import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler'; 
+import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import { runOnJS } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
@@ -8,16 +8,18 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { useTensorflowModel } from '../providers/ModelProvider';
 import * as Haptics from 'expo-haptics';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing } from 'react-native-reanimated';
-// Local alias for TypedArray since the library doesn't export a type
+
+
+
 type TypedArray =
-  | Float32Array
-  | Int32Array
-  | Uint8Array
-  | Uint8ClampedArray
-  | Int8Array
-  | Uint16Array
-  | Int16Array
-  | Uint32Array;
+    | Float32Array
+    | Int32Array
+    | Uint8Array
+    | Uint8ClampedArray
+    | Int8Array
+    | Uint16Array
+    | Int16Array
+    | Uint32Array;
 import * as ImageManipulator from 'expo-image-manipulator';
 import { File } from 'expo-file-system';
 import { decode as decodeJpeg } from 'jpeg-js';
@@ -42,13 +44,13 @@ export function Scanner() {
     const camera = useRef<Camera>(null);
     const [photoUri, setPhotoUri] = useState<string | null>(null);
     const [facing, setFacing] = useState<'front' | 'back'>('back');
-    const [torchOn, setTorchOn]  = useState(false);
-    const [photoSize, setPhotoSize] = useState<{ width: number; height: number} | null>(null);
+    const [torchOn, setTorchOn] = useState(false);
+    const [photoSize, setPhotoSize] = useState<{ width: number; height: number } | null>(null);
     const [ready, setReady] = useState<boolean>(false);
     const { model, status, error } = useTensorflowModel();
     const insets = useSafeAreaInsets();
     const tabBarBase = 67;
-    const focusDot = useRef<{x: Number, y: number} | null>(null);
+    const focusDot = useRef<{ x: Number, y: number } | null>(null);
     const [showFocusDot, setShowFocusDot] = useState(false);
 
     // Ask for camera permission on first load
@@ -64,8 +66,8 @@ export function Scanner() {
         c.focus(point);
     }, [])
 
-    const gesture = Gesture.Tap().onEnd(({x, y}) => {
-        runOnJS(focus)({x, y});
+    const gesture = Gesture.Tap().onEnd(({ x, y }) => {
+        runOnJS(focus)({ x, y });
     })
 
 
@@ -86,7 +88,7 @@ export function Scanner() {
                 <Text>Please grant permission for camera access.</Text>
                 <Pressable onPress={requestPermission} style={styles.permissionsButton}>
                     <Text style={styles.permissionsButtonText}>Grant Camera Access</Text>
-                </Pressable> 
+                </Pressable>
             </View>
         )
     }
@@ -95,7 +97,7 @@ export function Scanner() {
         return <View />
     }
 
-    
+
     /*
     function toggleCameraDirection() {
         setFacing(current => (current === 'back' ? 'front' : 'back'));
@@ -125,7 +127,7 @@ export function Scanner() {
     }
     
     */
-    
+
     const takePicture = async () => {
         if (!ready || !camera.current) return;
 
@@ -163,7 +165,7 @@ export function Scanner() {
                 const r = data[j];
                 const g = data[j + 1];
                 const b = data[j + 2];
-                input[i]     = r;     // 0..255
+                input[i] = r;     // 0..255
                 input[i + 1] = g;     // 0..255
                 input[i + 2] = b;     // 0..255
             }
@@ -182,7 +184,7 @@ export function Scanner() {
             let bestIdx = 0, best = -Infinity;
             for (let k = 0; k < probs.length; k++) if (probs[k] > best) { best = probs[k]; bestIdx = k; }
             const predArray = ['aerobic_steppers', 'bench_press', 'dumb_bell', 'elliptical', 'multi_machine', 'rowing_machine', 'treadmill'];
-            console.log(`Pred: ${predArray[bestIdx]}  conf: ${(best*100).toFixed(2)}%`);
+            console.log(`Pred: ${predArray[bestIdx]}  conf: ${(best * 100).toFixed(2)}%`);
 
         } catch (e) {
             console.warn("Image manipulation failed:", e);
@@ -194,33 +196,33 @@ export function Scanner() {
         return (
             <View style={styles.previewContainer}>
                 <RenderStatusBar />
-                <Image 
-                    source={{uri}} 
-                    style={StyleSheet.absoluteFill} 
+                <Image
+                    source={{ uri }}
+                    style={StyleSheet.absoluteFill}
                     contentFit='cover'
                 />
 
                 <Pressable
-                onPress={() => {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                    setPhotoUri(null)
-                
-                }}
-                style={{
-                    position: 'absolute',
-                    top: insets.top + 8,
-                    left: 12,
-                    width: 44,
-                    height: 44,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                }}
+                    onPress={() => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                        setPhotoUri(null)
+
+                    }}
+                    style={{
+                        position: 'absolute',
+                        top: insets.top + 8,
+                        left: 12,
+                        width: 44,
+                        height: 44,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                    }}
                 >
                     <Text style={{ fontSize: 34, color: 'white' }}>×</Text>
                 </Pressable>
 
 
-                <CaptureButton 
+                <CaptureButton
                     mode="preview"
                     onConfirm={() => uploadPhoto(uri)}
                     insetsBottom={insets.bottom}
@@ -232,21 +234,21 @@ export function Scanner() {
     function RenderStatusBar() {
         return (
             <>
-                <View 
-                pointerEvents = "none"
-                style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    height: insets.top,
-                    backgroundColor: 'black',
-                    zIndex: 1000
-                }}
+                <View
+                    pointerEvents="none"
+                    style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        height: insets.top,
+                        backgroundColor: 'black',
+                        zIndex: 1000
+                    }}
                 />
-                <StatusBar 
-                barStyle='light-content'
-                hidden={false}
+                <StatusBar
+                    barStyle='light-content'
+                    hidden={false}
                 />
             </>
         )
@@ -267,7 +269,7 @@ export function Scanner() {
         const scale = useSharedValue(1);
 
         const style = useAnimatedStyle(() => ({
-            transform: [{scale: scale.value}],
+            transform: [{ scale: scale.value }],
         }));
 
         const pressIn = () => {
@@ -286,21 +288,21 @@ export function Scanner() {
         };
         const handlePress = () => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-            
+
             if (mode === 'idle') onCapture?.();
             else onConfirm?.();
         };
 
         return (
-            <Animated.View 
-            style = {[
-                {
-                    position: 'absolute',
-                    bottom: Math.max(insetsBottom, 12) + tabBarBase,
-                    alignSelf: 'center',
-                },
-                style,
-            ]}
+            <Animated.View
+                style={[
+                    {
+                        position: 'absolute',
+                        bottom: Math.max(insetsBottom, 12) + tabBarBase,
+                        alignSelf: 'center',
+                    },
+                    style,
+                ]}
             >
                 <Pressable
                     onPressIn={pressIn}
@@ -317,15 +319,15 @@ export function Scanner() {
                 >
                     {mode === 'idle' ? (
                         <View
-                        style={{
-                            width: 60,
-                            height: 60,
-                            borderRadius: 30,
-                            backgroundColor: 'white',
-                        }}
+                            style={{
+                                width: 60,
+                                height: 60,
+                                borderRadius: 30,
+                                backgroundColor: 'white',
+                            }}
                         />
                     ) : (
-                        <Text style={{fontSize: 28, fontWeight: 'bold', color: 'black'}}>✓</Text>
+                        <Text style={{ fontSize: 28, fontWeight: 'bold', color: 'black' }}>✓</Text>
                     )}
                 </Pressable>
             </Animated.View>
@@ -336,23 +338,23 @@ export function Scanner() {
     const renderCamera = () => {
         return (
             <GestureHandlerRootView>
-            <View style={styles.container}>
-                <RenderStatusBar />
+                <View style={styles.container}>
+                    <RenderStatusBar />
                     <GestureDetector gesture={gesture}>
-                        <Camera 
-                        style={StyleSheet.absoluteFill}
-                        device={device}
-                        isActive={true}
-                        ref={camera}
-                        photo={true}
-                        enableZoomGesture={true}
-                        zoom={device.neutralZoom}
-                        outputOrientation="preview"
-                        onInitialized={() => setReady(true)}
-                        torch={torchOn ? 'on' : 'off'}
+                        <Camera
+                            style={StyleSheet.absoluteFill}
+                            device={device}
+                            isActive={true}
+                            ref={camera}
+                            photo={true}
+                            enableZoomGesture={true}
+                            zoom={device.neutralZoom}
+                            outputOrientation="preview"
+                            onInitialized={() => setReady(true)}
+                            torch={torchOn ? 'on' : 'off'}
                         />
                     </GestureDetector>
-                {/*
+                    {/*
                 <View style={styles.buttonContainer}>
                     <TouchableOpacity style={styles.button} onPress={takePicture}>
                         <Text style={styles.text}>Take Photo</Text>
@@ -360,14 +362,14 @@ export function Scanner() {
                 </View>
                 */}
 
-                
-                <CaptureButton 
-                mode="idle"
-                onCapture={takePicture}
-                insetsBottom={insets.bottom}
-                />
 
-            </View>
+                    <CaptureButton
+                        mode="idle"
+                        onCapture={takePicture}
+                        insetsBottom={insets.bottom}
+                    />
+
+                </View>
 
             </GestureHandlerRootView>
         )
@@ -390,68 +392,68 @@ export function Scanner() {
     }
 
     return (
-       <View style={styles.biggerContainer}>
-        {photoUri ? renderPicture(photoUri): renderCamera() }
-       </View>
+        <View style={styles.biggerContainer}>
+            {photoUri ? renderPicture(photoUri) : renderCamera()}
+        </View>
     )
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 10,
-  },
-  biggerContainer: {
-    flex: 1,
-    backgroundColor: '#000'
-  },
-  permissionsPage: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 10,
-  },
-  camera: {
-    flex: 1,
-    width: '100%',
-    height: '100%'
-  }, 
-  buttonContainer: {
-    position: 'absolute',
-    bottom: 64,
-    flexDirection: 'column',
-    backgroundColor: 'transparent',
-    width: '100%',
-    paddingHorizontal: 64,
-  },
-  button: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  text: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: 'white',
-  },
-  previewContainer: {
-    flex: 1,
-    backgroundColor: 'black',
-  },
-  previewImage: {
-    width: '100%',
-    height: '100%',
-  },
-  permissionsButton: {
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 24,
-    backgroundColor: 'white',
-  },
-  permissionsButtonText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: 'black',
-  },
+    container: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        gap: 10,
+    },
+    biggerContainer: {
+        flex: 1,
+        backgroundColor: '#000'
+    },
+    permissionsPage: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        gap: 10,
+    },
+    camera: {
+        flex: 1,
+        width: '100%',
+        height: '100%'
+    },
+    buttonContainer: {
+        position: 'absolute',
+        bottom: 64,
+        flexDirection: 'column',
+        backgroundColor: 'transparent',
+        width: '100%',
+        paddingHorizontal: 64,
+    },
+    button: {
+        flex: 1,
+        alignItems: 'center',
+    },
+    text: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: 'white',
+    },
+    previewContainer: {
+        flex: 1,
+        backgroundColor: 'black',
+    },
+    previewImage: {
+        width: '100%',
+        height: '100%',
+    },
+    permissionsButton: {
+        paddingVertical: 12,
+        paddingHorizontal: 24,
+        borderRadius: 24,
+        backgroundColor: 'white',
+    },
+    permissionsButtonText: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: 'black',
+    },
 });

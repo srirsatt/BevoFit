@@ -47,7 +47,8 @@
       "expo-asset",
       "react-native-map-link",
       "expo-web-browser",
-      "expo-router"
+      "expo-router",
+      "react-native-vision-camera"
     ],
     "extra": {
       "eas": {
