@@ -1,4 +1,4 @@
-import { NativeTabs, Icon, Label } from 'expo-router/unstable-native-tabs';
+import { NativeTabs, Icon, Label, VectorIcon } from 'expo-router/unstable-native-tabs';
 import { Assets as NavigationAssets } from '@react-navigation/elements';
 import { DarkTheme, DefaultTheme } from '@react-navigation/native';
 import { Asset } from 'expo-asset';
@@ -14,6 +14,8 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { DemoModeProvider } from '../contexts/DemoModeContext';
 import ClassicTabs from './tabs';
 import { House, Map, Trophy } from 'lucide-react-native';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+
 
 Asset.loadAsync([
   ...NavigationAssets,
@@ -69,18 +71,23 @@ export default function TabLayout() {
             <ClassicTabs />
           ) : (
             <NativeTabs
+              minimizeBehavior="onScrollDown"
               tintColor='#BF5700'
             >
               <NativeTabs.Trigger name="index">
-                <Label>Home</Label>
+                <Label hidden>Home</Label>
                 <Icon sf="house.fill" drawable="custom_android_drawable" />
               </NativeTabs.Trigger>
-              <NativeTabs.Trigger name="intramurals">
-                <Label>IM Sports</Label>
-                <Icon sf="sportscourt.fill" drawable="custom_android_drawable" />
+              <NativeTabs.Trigger name="calendar">
+                <Label hidden>Calendar</Label>
+                <Icon sf="calendar" drawable="custom_android_drawable" />
+              </NativeTabs.Trigger>
+              <NativeTabs.Trigger name="social">
+                <Label hidden>Social</Label>
+                <Icon sf="person.3.fill" drawable="custom_android_drawable" />
               </NativeTabs.Trigger>
               <NativeTabs.Trigger name="map">
-                <Label>Map</Label>
+                <Label hidden>Map</Label>
                 <Icon sf="map.fill" drawable="custom_android_drawable" />
               </NativeTabs.Trigger>
             </NativeTabs>

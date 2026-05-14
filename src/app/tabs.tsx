@@ -8,13 +8,15 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 
 // import our screens
 import { Home } from '../screens/Home';
-import { Intramurals } from '../screens/Intramurals';
+import { Calendar } from '../screens/Calendar';
 import { Map } from '../screens/Map';
+import { Social } from '../screens/Social';
 
 
 type TabParamList = {
     Home: undefined;
-    Intramurals: undefined;
+    Calendar: undefined;
+    Social: undefined;
     Map: undefined;
 };
 
@@ -60,11 +62,11 @@ export default function ClassicTabs() {
             >
             </Tab.Screen>
             <Tab.Screen
-                name="Intramurals"
-                component={Intramurals}
+                name="Calendar"
+                component={Calendar}
                 options={{
-                    tabBarLabel: 'IM Sports',
-                    tabBarIcon: ({ color, size }) => <Ionicons name="trophy" size={size} color={color} />
+                    tabBarLabel: 'Calendar',
+                    tabBarIcon: ({ color, size }) => <Ionicons name="calendar" size={size} color={color} />
                 }}
             >
             </Tab.Screen>
@@ -73,6 +75,14 @@ export default function ClassicTabs() {
                 component={Map}
                 options={{
                     tabBarIcon: ({ color, size }) => <Ionicons name="map" size={size} color={color} />
+                }}
+            >
+            </Tab.Screen>
+            <Tab.Screen
+                name="Social"
+                component={Social}
+                options={{
+                    tabBarIcon: ({ color, size }) => <Ionicons name="people" size={size} color={color} />
                 }}
             >
             </Tab.Screen>

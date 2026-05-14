@@ -42,7 +42,7 @@ export async function getIntramurals() {
 
 
 
-export function Intramurals() {
+export function Calendar() {
     const insets = useSafeAreaInsets();
     const intramuralInfo = "The Intramural Sports program provides competitive and recreational sports leagues, " +
         "tournaments, and special events for all students, regardless of skill level."
@@ -197,7 +197,7 @@ export function Intramurals() {
             className="bg-white dark:bg-black"
         >
             <View className="w-full px-5 mt-4 mb-2">
-                <Text className="text-gray-900 dark:text-white text-5xl mt-2 font-extrabold">Intramurals</Text>
+                <Text className="text-gray-900 dark:text-white text-5xl mt-2 font-extrabold">Calendar</Text>
             </View>
             <ScrollView
                 className="flex-1 px-5"
