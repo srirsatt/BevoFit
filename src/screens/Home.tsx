@@ -579,7 +579,7 @@ export function Home() {
           onChange={handleSheetChanges}
           onDismiss={onDismiss}
           backdropComponent={renderBackdrop}
-          backgroundStyle={{ backgroundColor: isDarkMode ? '#111111' : '#FFFFFF', borderTopLeftRadius: 20, borderTopRightRadius: 20 }}
+          backgroundStyle={{ backgroundColor: isDarkMode ? '#0D0D0F' : '#FFFFFF', borderTopLeftRadius: 20, borderTopRightRadius: 20 }}
           handleIndicatorStyle={{ backgroundColor: isDarkMode ? 'white' : '#D4D4D4', width: '10%', height: 5 }}
           enableDynamicSizing={false}
         >
@@ -752,7 +752,7 @@ const Card = ({ gym, onPress }: { gym: FacilityWithHours; onPress: (gym: Facilit
       style={rStyle}
       onPressIn={() => { scale.value = withTiming(0.95, { duration: 80 }); }}
       onPressOut={() => { scale.value = withTiming(1, { duration: 100 }); }}
-      className="w-full min-h-[80px] bg-white dark:bg-[#111111] rounded-2xl border border-[#E5E5E5] dark:border-[#262626] px-4 mt-1 flex-row items-center justify-between mb-4"
+      className="w-full min-h-[80px] bg-white dark:bg-[#0D0D0F] rounded-2xl border border-[#E5E5E5] dark:border-[#262626] px-4 mt-1 flex-row items-center justify-between mb-4"
       onPress={() => onPress(gym)}
     >
       <View>

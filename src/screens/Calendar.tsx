@@ -142,10 +142,10 @@ const CalendarCard = ({ classItem, width }: { classItem: CalendarClass; width: n
     return (
         <View
             style={{ width }}
-            className="w-full min-h-[200px] bg-white dark:bg-[#111111] rounded-2xl border border-[#E5E5E5] dark:border-[#262626] px-4 py-3 mt-1 flex-row items-center"
+            className="w-full min-h-[200px] bg-white dark:bg-[#0D0D0F] rounded-2xl border border-[#E5E5E5] dark:border-[#262626] px-4 py-3 mt-1 flex-row items-center"
         >
             <View className="flex-col ">
-                <Text className="text-black dark:text-white">{classItem.name}</Text>
+                <Text className="text-black dark:text-white pb-1 text-xl font-bold">{classItem.name}</Text>
                 <Text className="text-black dark:text-white">{classItem.timeLabel}</Text>
                 <Text className="text-black dark:text-white">{classItem.studio}</Text>
                 <Text className="text-black dark:text-white">{classItem.instructor}</Text>
@@ -160,6 +160,7 @@ const CalendarCard = ({ classItem, width }: { classItem: CalendarClass; width: n
 
 export function Calendar() {
     const [calendarClasses, setCalendarClasses] = useState<CalendarClass[]>([]);
+    const [activeCardIndex, setActiveCardIndex] = useState(0);
     const [loading, setLoading] = useState(true);
     const { width } = useWindowDimensions();
     const cardWidth = width - 40;
@@ -200,6 +201,15 @@ export function Calendar() {
         }
         loadClasses();
     }, []);
+
+    // handler for card dots view
+
+    function handleCardScrollEnd(event: any) {
+        const offsetX = event.nativeEvent.contentOffset.x; // tracks by card offset for which card is active
+        const index = Math.round(offsetX / (cardWidth + cardGap));
+
+        setActiveCardIndex(index);
+    }
 
     const insets = useSafeAreaInsets();
 
@@ -242,8 +252,9 @@ export function Calendar() {
                     snapToAlignment="start"
                     decelerationRate="fast"
                     disableIntervalMomentum
-                    style={{ height: 250, flexGrow: 0, marginTop: 2 }}
-                    contentContainerStyle={{ paddingVertical: 8 }}
+                    onMomentumScrollEnd={handleCardScrollEnd}
+                    style={{ width, height: 250, flexGrow: 0, marginLeft: -20, marginTop: 2 }}
+                    contentContainerStyle={{ paddingVertical: 8, paddingHorizontal: 20 }}
                 >
                     {todayClasses.map((calClass) => (
                         <View key={calClass.id} style={{ marginRight: cardGap }}>
@@ -252,6 +263,31 @@ export function Calendar() {
                     ))}
 
                 </ScrollView>
+
+                { /* dot rendering */}
+
+                <View
+                    className="flex-row items-center justify-center mt-2"
+                >
+                    {todayClasses.map((item, index) => {
+                        const isActive = index === activeCardIndex;
+
+                        return (
+                            <View
+                                key={item.id}
+                                style={{
+                                    width: 6,
+                                    height: 6,
+                                    borderRadius: 999,
+                                    marginHorizontal: 3,
+                                    backgroundColor: isActive ? "#BF5700" : "#525252"
+                                }}
+
+                            />
+                        );
+                    })}
+
+                </View>
             </View>
         </View>
     )
