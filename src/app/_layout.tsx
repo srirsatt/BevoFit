@@ -1,4 +1,4 @@
-import { NativeTabs, Icon, Label, VectorIcon } from 'expo-router/unstable-native-tabs';
+import { NativeTabs, Icon, Label } from 'expo-router/unstable-native-tabs';
 import { Assets as NavigationAssets } from '@react-navigation/elements';
 import { DarkTheme, DefaultTheme } from '@react-navigation/native';
 import { Asset } from 'expo-asset';
@@ -89,6 +89,10 @@ export default function TabLayout() {
               <NativeTabs.Trigger name="map">
                 <Label hidden>Map</Label>
                 <Icon sf="map.fill" drawable="custom_android_drawable" />
+              </NativeTabs.Trigger>
+              <NativeTabs.Trigger name="settings">
+                <Label hidden>Settings</Label>
+                <Icon sf="gear" drawable="custom_android_drawable" />
               </NativeTabs.Trigger>
             </NativeTabs>
           )}
