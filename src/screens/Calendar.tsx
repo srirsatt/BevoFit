@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, ScrollView } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
@@ -118,7 +118,7 @@ function toCalendarClass(row: ClassRow): CalendarClass {
 }
 
 
-const CalendarCard = ({ classItem }: { classItem: CalendarClass }) => {
+const CalendarCard = ({ classItem, width }: { classItem: CalendarClass; width: number }) => {
     const scale = useSharedValue(1);
 
     // what should the card look like!
@@ -141,7 +141,8 @@ const CalendarCard = ({ classItem }: { classItem: CalendarClass }) => {
 
     return (
         <View
-            className="w-full min-h-[100px] bg-white dark:bg-[#111111] rounded-2xl border border-[#E5E5E5] dark:border-[#262626] px-4 py-3 mt-1 flex-row items-center"
+            style={{ width }}
+            className="w-full min-h-[200px] bg-white dark:bg-[#111111] rounded-2xl border border-[#E5E5E5] dark:border-[#262626] px-4 py-3 mt-1 flex-row items-center"
         >
             <View className="flex-col ">
                 <Text className="text-black dark:text-white">{classItem.name}</Text>
@@ -160,6 +161,9 @@ const CalendarCard = ({ classItem }: { classItem: CalendarClass }) => {
 export function Calendar() {
     const [calendarClasses, setCalendarClasses] = useState<CalendarClass[]>([]);
     const [loading, setLoading] = useState(true);
+    const { width } = useWindowDimensions();
+    const cardWidth = width - 40;
+    const cardGap = 12;
 
     useEffect(() => {
         async function loadClasses() {
@@ -176,8 +180,9 @@ export function Calendar() {
                 return;
             }
 
-            console.log("supabase row count", data?.length);
-            console.log("supabase raw data", data);
+
+            //console.log("supabase row count", data?.length);
+            //console.log("supabase raw data", data);
 
             const calendarCardObjects: CalendarClass[] = (data ?? [])
                 .flatMap((row) => {
@@ -209,10 +214,14 @@ export function Calendar() {
         .sort((a, b) => a.startMinutes - b.startMinutes);
     // filtering by Dates from supabase!
 
+
+    /*
     console.log("all classes", calendarClasses.length);
     console.log("today", today);
     console.log("today classes", todayClasses.length);
     console.log("days", calendarClasses.map((item) => item.day));
+
+    */
 
 
     return (
@@ -227,11 +236,19 @@ export function Calendar() {
                 <Text className="text-gray-900 dark:text-white text-5xl mt-2 font-extrabold">Calendar</Text>
 
                 <ScrollView
-                    contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 8, gap: 12 }}
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    snapToInterval={cardWidth + cardGap}
+                    snapToAlignment="start"
+                    decelerationRate="fast"
+                    disableIntervalMomentum
+                    style={{ height: 250, flexGrow: 0, marginTop: 2 }}
+                    contentContainerStyle={{ paddingVertical: 8 }}
                 >
                     {todayClasses.map((calClass) => (
-                        <CalendarCard key={calClass.id} classItem={calClass} />
-
+                        <View key={calClass.id} style={{ marginRight: cardGap }}>
+                            <CalendarCard classItem={calClass} width={cardWidth} />
+                        </View>
                     ))}
 
                 </ScrollView>
