@@ -167,10 +167,15 @@ function translateStudioName(studio: string) {
     return [translatedCode, ...rest].join(" ");
 }
 
+// TBD checker for diff pfp
+
+
+
 
 const CalendarCard = ({ classItem, width }: { classItem: CalendarClass; width: number }) => {
     const scale = useSharedValue(1);
-    const instructorInitials = getInstructorInitials(classItem.instructor);
+    const isInstructorTBD = classItem.instructor.trim().toLowerCase() === "instructor tbd";
+    const instructorInitials = isInstructorTBD ? "?" : getInstructorInitials(classItem.instructor);
 
     // what should the card look like!
 
@@ -246,11 +251,11 @@ const CalendarCard = ({ classItem, width }: { classItem: CalendarClass; width: n
                 >
                     <View className="flex-row items-center flex-1">
                         <View
-                            style={{ backgroundColor: BURNT_ORANGE }}
+                            style={{ backgroundColor: isInstructorTBD ? "#3F3F46" : BURNT_ORANGE }}
                             className="w-11 h-11 rounded-full items-center justify-center"
                         >
-                            <Text className="text-white text-sm font-extrabold">
-                                {instructorInitials || "?"}
+                            <Text className={`text-white ${isInstructorTBD ? "text-lg" : "text-sm"} font-extrabold`}>
+                                {instructorInitials}
                             </Text>
                         </View>
 
