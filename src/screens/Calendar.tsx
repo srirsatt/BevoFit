@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, ScrollView, useWindowDimensions } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, useWindowDimensions, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
@@ -12,6 +12,9 @@ import Animated, {
     Extrapolation,
 } from 'react-native-reanimated';
 import type { SharedValue } from 'react-native-reanimated';
+import { getFacilityForStudio } from '../lib/facilities';
+import { FacilityMarker } from '../lib/facilities';
+import { showLocation } from 'react-native-map-link';
 
 
 type ClassRow = {
@@ -172,10 +175,24 @@ function translateStudioName(studio: string) {
 
 
 
-const CalendarCard = ({ classItem, width }: { classItem: CalendarClass; width: number }) => {
+const CalendarCard = ({ classItem, width, facilities }: { classItem: CalendarClass; width: number; facilities: FacilityMarker[] }) => {
     const scale = useSharedValue(1);
     const isInstructorTBD = classItem.instructor.trim().toLowerCase() === "instructor tbd";
     const instructorInitials = isInstructorTBD ? "?" : getInstructorInitials(classItem.instructor);
+    const facility = getFacilityForStudio(classItem.studio, facilities);
+
+    const openClassDirections = () => {
+        if (!facility) return;
+
+        showLocation({
+            address: facility.addr,
+            latitude: facility.lat,
+            longitude: facility.lng,
+            directionsMode: "walk",
+            title: facility.name,
+            appsWhiteList: ["apple-maps", "google-maps"],
+        });
+    };
 
     // what should the card look like!
 
@@ -247,9 +264,9 @@ const CalendarCard = ({ classItem, width }: { classItem: CalendarClass; width: n
 
                 <View
                     style={{ height: FOOTER_HEIGHT }}
-                    className="flex-row items-center"
+                    className="flex-row items-center justify-between"
                 >
-                    <View className="flex-row items-center flex-1">
+                    <View className="flex-row items-center flex-1 pr-3">
                         <View
                             style={{ backgroundColor: isInstructorTBD ? "#3F3F46" : BURNT_ORANGE }}
                             className="w-11 h-11 rounded-full items-center justify-center"
@@ -271,6 +288,20 @@ const CalendarCard = ({ classItem, width }: { classItem: CalendarClass; width: n
                             </Text>
                         </View>
                     </View>
+
+                    <Pressable
+                        onPress={openClassDirections}
+                        disabled={!facility}
+                        className={`w-11 h-11 rounded-xl border items-center justify-center ${
+                            facility
+                                ? "border-[#525252]"
+                                : "border-[#333333] opacity-40"
+                        }`}
+                    >
+                        <View style={{ transform: [{ rotate: "45deg" }] }}>
+                            <Ionicons name="arrow-up-outline" size={20} color="#F5F5F5" />
+                        </View>
+                    </Pressable>
                 </View>
             </View>
 
@@ -360,6 +391,7 @@ export function Calendar() {
     const [calendarClasses, setCalendarClasses] = useState<CalendarClass[]>([]);
     const scrollX = useSharedValue(0);
     const [loading, setLoading] = useState(true);
+    const [facilities, setFacilities] = useState<FacilityMarker[]>([]);
     const { width } = useWindowDimensions();
     const cardWidth = width - 40;
     const cardGap = 12;
@@ -457,6 +489,26 @@ export function Calendar() {
         }
     }, [calendarClasses, loading, today, todayClassCount]);
 
+    useEffect(() => {
+        async function loadFacilities() {
+            const { data, error } = await supabase
+                .from("facilities")
+                .select("id, name, lat, lng, general_info, addr")
+                .not("lat", "is", null)
+                .not("lng", "is", null);
+
+            if (error) {
+                console.error("cal err loading faciliites", error);
+                setFacilities([]);
+                return;
+            }
+
+            setFacilities((data ?? []) as FacilityMarker[]);
+        }
+
+        loadFacilities();
+    }, []);
+
     const animatedDotRowStyle = useAnimatedStyle(() => {
         const progress = scrollX.value / snapInterval;
         const centeredOffset = Math.floor(VISIBLE_DOTS / 2);
@@ -511,7 +563,7 @@ export function Calendar() {
                 >
                     {todayClasses.map((calClass) => (
                         <View key={calClass.id} style={{ marginRight: cardGap }}>
-                            <CalendarCard classItem={calClass} width={cardWidth} />
+                            <CalendarCard classItem={calClass} width={cardWidth} facilities={facilities} />
                         </View>
                     ))}
 
