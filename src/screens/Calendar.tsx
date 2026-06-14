@@ -15,6 +15,7 @@ import type { SharedValue } from 'react-native-reanimated';
 import { getFacilityForStudio } from '../lib/facilities';
 import { FacilityMarker } from '../lib/facilities';
 import { showLocation } from 'react-native-map-link';
+import * as Haptics from "expo-haptics";
 
 
 type ClassRow = {
@@ -24,6 +25,7 @@ type ClassRow = {
     name: string;
     studio: string;
     instructor: string;
+    activity_type: string;
     // supabase structure
 };
 
@@ -43,6 +45,7 @@ type CalendarClass = {
     name: string;
     studio: string;
     instructor: string;
+    activityType: string;
 
 
     timeLabel: string;
@@ -146,6 +149,7 @@ function toCalendarClass(row: ClassRow): CalendarClass {
         name: row.name,
         studio: row.studio,
         instructor: row.instructor,
+        activityType: row.activity_type,
 
 
         timeLabel: row.time,
@@ -180,9 +184,12 @@ const CalendarCard = ({ classItem, width, facilities }: { classItem: CalendarCla
     const isInstructorTBD = classItem.instructor.trim().toLowerCase() === "instructor tbd";
     const instructorInitials = isInstructorTBD ? "?" : getInstructorInitials(classItem.instructor);
     const facility = getFacilityForStudio(classItem.studio, facilities);
+    const [titleLineCount, setTitleLineCount] = useState(1);
 
     const openClassDirections = () => {
         if (!facility) return;
+
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
         showLocation({
             address: facility.addr,
@@ -224,9 +231,21 @@ const CalendarCard = ({ classItem, width, facilities }: { classItem: CalendarCla
                         numberOfLines={2}
                         adjustsFontSizeToFit
                         minimumFontScale={0.65}
+                        onTextLayout={(event) => {
+                            setTitleLineCount(event.nativeEvent.lines.length);
+                        }}
                     >
                         {classItem.name}
                     </Text>
+                    {titleLineCount === 1 && (
+                        <Text
+                            style={{ marginTop: 5 }}
+                            className="text-gray-500 dark:text-neutral-500 text-md font-semibold-mt-1"
+                            numberOfLines={1}
+                        >
+                            {classItem.activityType}
+                        </Text>
+                    )}
                 </View>
 
                 <View className="h-px bg-[#E5E5E5] dark:bg-[#2C2C30]" />
@@ -292,11 +311,10 @@ const CalendarCard = ({ classItem, width, facilities }: { classItem: CalendarCla
                     <Pressable
                         onPress={openClassDirections}
                         disabled={!facility}
-                        className={`w-11 h-11 rounded-xl border items-center justify-center ${
-                            facility
-                                ? "border-[#525252]"
-                                : "border-[#333333] opacity-40"
-                        }`}
+                        className={`w-11 h-11 rounded-xl border items-center justify-center ${facility
+                            ? "border-[#525252]"
+                            : "border-[#333333] opacity-40"
+                            }`}
                     >
                         <View style={{ transform: [{ rotate: "45deg" }] }}>
                             <Ionicons name="arrow-up-outline" size={20} color="#F5F5F5" />
@@ -404,7 +422,7 @@ export function Calendar() {
             try {
                 const { data, error } = await supabase
                     .from("classes")
-                    .select("id, day, time, name, studio, instructor")
+                    .select("id, day, time, name, studio, instructor, activity_type")
 
 
                 if (error) {

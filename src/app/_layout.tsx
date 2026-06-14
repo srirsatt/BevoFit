@@ -3,8 +3,9 @@ import { Assets as NavigationAssets } from '@react-navigation/elements';
 import { DarkTheme, DefaultTheme } from '@react-navigation/native';
 import { Asset } from 'expo-asset';
 import { createURL } from 'expo-linking';
+import { usePathname } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useColorScheme, Platform } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import "../../global.css"
@@ -54,6 +55,27 @@ function iosMajor(): number | null {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
+function NativeTabHaptics() {
+  const pathname = usePathname();
+  const previousTabRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    const currentTab = pathname.split('/').filter(Boolean)[0] ?? 'index';
+
+    if (previousTabRef.current === null) {
+      previousTabRef.current = currentTab;
+      return;
+    }
+
+    if (previousTabRef.current !== currentTab) {
+      Haptics.selectionAsync();
+      previousTabRef.current = currentTab;
+    }
+  }, [pathname]);
+
+  return null;
+}
+
 
 export default function TabLayout() {
   const ver = iosMajor();
@@ -70,31 +92,34 @@ export default function TabLayout() {
           {useClassic ? (
             <ClassicTabs />
           ) : (
-            <NativeTabs
-              minimizeBehavior="onScrollDown"
-              tintColor='#BF5700'
-            >
-              <NativeTabs.Trigger name="index">
-                <Label hidden>Home</Label>
-                <Icon sf="house.fill" drawable="custom_android_drawable" />
-              </NativeTabs.Trigger>
-              <NativeTabs.Trigger name="calendar">
-                <Label hidden>Calendar</Label>
-                <Icon sf="calendar" drawable="custom_android_drawable" />
-              </NativeTabs.Trigger>
-              <NativeTabs.Trigger name="social">
-                <Label hidden>Social</Label>
-                <Icon sf="person.3.fill" drawable="custom_android_drawable" />
-              </NativeTabs.Trigger>
-              <NativeTabs.Trigger name="map">
-                <Label hidden>Map</Label>
-                <Icon sf="map.fill" drawable="custom_android_drawable" />
-              </NativeTabs.Trigger>
-              <NativeTabs.Trigger name="settings">
-                <Label hidden>Settings</Label>
-                <Icon sf="gear" drawable="custom_android_drawable" />
-              </NativeTabs.Trigger>
-            </NativeTabs>
+            <>
+              <NativeTabHaptics />
+              <NativeTabs
+                minimizeBehavior="onScrollDown"
+                tintColor='#BF5700'
+              >
+                <NativeTabs.Trigger name="index">
+                  <Label hidden>Home</Label>
+                  <Icon sf="house.fill" drawable="custom_android_drawable" />
+                </NativeTabs.Trigger>
+                <NativeTabs.Trigger name="calendar">
+                  <Label hidden>Calendar</Label>
+                  <Icon sf="calendar" drawable="custom_android_drawable" />
+                </NativeTabs.Trigger>
+                <NativeTabs.Trigger name="social">
+                  <Label hidden>Social</Label>
+                  <Icon sf="person.3.fill" drawable="custom_android_drawable" />
+                </NativeTabs.Trigger>
+                <NativeTabs.Trigger name="map">
+                  <Label hidden>Map</Label>
+                  <Icon sf="map.fill" drawable="custom_android_drawable" />
+                </NativeTabs.Trigger>
+                <NativeTabs.Trigger name="settings">
+                  <Label hidden>Settings</Label>
+                  <Icon sf="gear" drawable="custom_android_drawable" />
+                </NativeTabs.Trigger>
+              </NativeTabs>
+            </>
           )}
         </BottomSheetModalProvider>
       </GestureHandlerRootView>
