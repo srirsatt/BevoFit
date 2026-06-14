@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, ScrollView, useWindowDimensions, Pressable } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, useWindowDimensions, Pressable, useColorScheme } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
@@ -181,24 +181,28 @@ function translateStudioName(studio: string) {
 
 const CalendarCard = ({ classItem, width, facilities }: { classItem: CalendarClass; width: number; facilities: FacilityMarker[] }) => {
     const scale = useSharedValue(1);
+    const colorScheme = useColorScheme();
+    const isDarkMode = colorScheme === "dark";
     const isInstructorTBD = classItem.instructor.trim().toLowerCase() === "instructor tbd";
     const instructorInitials = isInstructorTBD ? "?" : getInstructorInitials(classItem.instructor);
     const facility = getFacilityForStudio(classItem.studio, facilities);
     const [titleLineCount, setTitleLineCount] = useState(1);
 
-    const openClassDirections = () => {
+    const openClassDirections = async () => {
         if (!facility) return;
 
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
-        showLocation({
-            address: facility.addr,
-            latitude: facility.lat,
-            longitude: facility.lng,
-            directionsMode: "walk",
-            title: facility.name,
-            appsWhiteList: ["apple-maps", "google-maps"],
-        });
+        setTimeout(() => {
+            showLocation({
+                address: facility.addr,
+                latitude: facility.lat,
+                longitude: facility.lng,
+                directionsMode: "walk",
+                title: facility.name,
+                appsWhiteList: ["apple-maps"],
+            });
+        }, 40);
     };
 
     // what should the card look like!
@@ -222,7 +226,7 @@ const CalendarCard = ({ classItem, width, facilities }: { classItem: CalendarCla
     return (
         <View
             style={{ width, height: CARD_HEIGHT }}
-            className="w-full bg-white dark:bg-[#111113] rounded-2xl border border-[#E5E5E5] dark:border-[#2A2A2D] px-5 py-4 mt-1"
+            className="w-full bg-white dark:bg-[#0D0D0F] rounded-2xl border border-[#E5E5E5] dark:border-[#2A2A2D] px-5 py-4 mt-1"
         >
             <View className="flex-1">
                 <View style={{ height: TITLE_HEIGHT }}>
@@ -311,13 +315,13 @@ const CalendarCard = ({ classItem, width, facilities }: { classItem: CalendarCla
                     <Pressable
                         onPress={openClassDirections}
                         disabled={!facility}
-                        className={`w-11 h-11 rounded-xl border items-center justify-center ${facility
-                            ? "border-[#525252]"
-                            : "border-[#333333] opacity-40"
+                        className={`w-11 h-11 rounded-xl border items-center justify-center bg-white dark:bg-transparent ${facility
+                            ? "border-[#D4D4D4] dark:border-[#525252]"
+                            : "border-[#E5E5E5] dark:border-[#333333] opacity-40"
                             }`}
                     >
                         <View style={{ transform: [{ rotate: "45deg" }] }}>
-                            <Ionicons name="arrow-up-outline" size={20} color="#F5F5F5" />
+                            <Ionicons name="arrow-up-outline" size={20} color={isDarkMode ? "#F5F5F5" : "#171717"} />
                         </View>
                     </Pressable>
                 </View>
@@ -334,11 +338,13 @@ function AnimatedDot({
     totalCount,
     scrollX,
     snapInterval,
+    inactiveColor,
 }: {
     index: number;
     totalCount: number;
     scrollX: SharedValue<number>;
     snapInterval: number;
+    inactiveColor: string;
 }) {
     const animatedStyle = useAnimatedStyle(() => {
         const progress = scrollX.value / snapInterval;
@@ -372,7 +378,7 @@ function AnimatedDot({
         const backgroundColor = interpolateColor(
             distanceFromActive,
             [0, 1],
-            ["#BF5700", "#525252"]
+            [BURNT_ORANGE, inactiveColor]
         );
 
         const activeOpacity = interpolate(
@@ -396,7 +402,7 @@ function AnimatedDot({
                 height: DOT_SIZE,
                 borderRadius: DOT_SIZE / 2,
                 marginRight: DOT_GAP,
-                backgroundColor: "#525252",
+                backgroundColor: inactiveColor,
             }, animatedStyle]}
         />
     );
@@ -410,6 +416,9 @@ export function Calendar() {
     const scrollX = useSharedValue(0);
     const [loading, setLoading] = useState(true);
     const [facilities, setFacilities] = useState<FacilityMarker[]>([]);
+    const colorScheme = useColorScheme();
+    const isDarkMode = colorScheme === "dark";
+    const inactiveDotColor = isDarkMode ? "#525252" : "#D4D4D4";
     const { width } = useWindowDimensions();
     const cardWidth = width - 40;
     const cardGap = 12;
@@ -611,6 +620,7 @@ export function Calendar() {
                                 totalCount={todayClassCount}
                                 scrollX={scrollX}
                                 snapInterval={snapInterval}
+                                inactiveColor={inactiveDotColor}
                             />
                         ))}
 

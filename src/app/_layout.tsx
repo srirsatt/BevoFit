@@ -68,7 +68,7 @@ function NativeTabHaptics() {
     }
 
     if (previousTabRef.current !== currentTab) {
-      Haptics.selectionAsync();
+      //Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); uncomment to turn on
       previousTabRef.current = currentTab;
     }
   }, [pathname]);
