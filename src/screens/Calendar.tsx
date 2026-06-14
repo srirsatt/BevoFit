@@ -10,6 +10,7 @@ import Animated, {
     interpolate,
     interpolateColor,
     Extrapolation,
+    withTiming,
 } from 'react-native-reanimated';
 import type { SharedValue } from 'react-native-reanimated';
 import { getFacilityForStudio } from '../lib/facilities';
@@ -18,6 +19,7 @@ import { showLocation } from 'react-native-map-link';
 import * as Haptics from "expo-haptics";
 
 
+type IoniconName = React.ComponentProps<typeof Ionicons>["name"];
 type ClassRow = {
     id: string;
     day: string;
@@ -333,6 +335,26 @@ const CalendarCard = ({ classItem, width, facilities }: { classItem: CalendarCla
 
 }
 
+const OrangeCard = ({ onPress, text, iconName }: { onPress: () => void; text: string; iconName: IoniconName }) => {
+    const scale = useSharedValue(1);
+    const rStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+
+    return (
+        <AnimatedPressable
+            style={rStyle}
+            onPressIn={() => { scale.value = withTiming(0.95, { duration: 80 }); }}
+            onPressOut={() => { scale.value = withTiming(1, { duration: 100 }); }}
+            className="flex-1 h-20 bg-[#BF5700] rounded-2xl border border-[#E5E5E5] dark:border-[#262626] px-5 flex-row items-center justify-between"
+            onPress={onPress}
+        >
+            <Text className="text-white text-xl font-bold" numberOfLines={1}>
+                {text}
+            </Text>
+            <Ionicons name={iconName} color="white" size={30} />
+        </AnimatedPressable>
+    );
+}
+
 function AnimatedDot({
     index,
     totalCount,
@@ -573,7 +595,7 @@ export function Calendar() {
                 )}
 
                 {!loading && todayClasses.length > 0 && (
-                    <Text className="text-gray-500 dark:text-neutral-500 text-xs uppercase mt-2 mb-2">Today's Classes</Text>
+                    <Text className="text-gray-500 dark:text-neutral-500 text-xs uppercase mt-2 mb-2">Today's Events</Text>
                 )}
 
                 <AnimatedScrollView
@@ -601,7 +623,7 @@ export function Calendar() {
                         width: DOT_WINDOW_WIDTH,
                         overflow: "visible",
                         alignSelf: "center",
-                        marginTop: -10,
+                        marginTop: -14,
                     }}
                 >
                     <Animated.View
@@ -625,9 +647,16 @@ export function Calendar() {
                         ))}
 
                     </Animated.View>
+                </View>
 
+                <View className="flex-row gap-3 mt-5 mb-4">
+                    <OrangeCard onPress={() => { }} text='IMLeagues' iconName='medal-outline' />
+                    <OrangeCard onPress={() => { }} text='TeXercise' iconName='body-outline' />
                 </View>
             </View>
         </View>
     )
 }
+
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
