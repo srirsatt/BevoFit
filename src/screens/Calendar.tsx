@@ -17,6 +17,8 @@ import { getFacilityForStudio } from '../lib/facilities';
 import { FacilityMarker } from '../lib/facilities';
 import { showLocation } from 'react-native-map-link';
 import * as Haptics from "expo-haptics";
+import * as WebBrowser from 'expo-web-browser';
+import { useDemoMode } from '../contexts/DemoModeContext';
 
 
 type IoniconName = React.ComponentProps<typeof Ionicons>["name"];
@@ -335,6 +337,25 @@ const CalendarCard = ({ classItem, width, facilities }: { classItem: CalendarCla
 
 }
 
+const BlankCard = ({ width }: { width: number; }) => {
+    return (
+        <View
+            style={{ width, height: CARD_HEIGHT }}
+            className="w-full bg-white dark:bg-[#0D0D0F] rounded-2xl border border-[#E5E5E5] dark:border-[#2A2A2D] px-5 py-4 mt-1 items-center justify-center"
+        >
+            <Text className="text-gray-900 dark:text-white text-3xl font-extrabold text-center">
+                No classes today!
+            </Text>
+            <Text className="text-gray-500 dark:text-neutral-500 text-base font-semibold text-center mt-2">
+                Check out IMLeagues or TeXercise for more!
+            </Text>
+        </View>
+    )
+
+}
+
+
+
 const OrangeCard = ({ onPress, text, iconName }: { onPress: () => void; text: string; iconName: IoniconName }) => {
     const scale = useSharedValue(1);
     const rStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
@@ -433,6 +454,8 @@ function AnimatedDot({
 const AnimatedScrollView = Animated.createAnimatedComponent(ScrollView);
 
 
+
+
 export function Calendar() {
     const [calendarClasses, setCalendarClasses] = useState<CalendarClass[]>([]);
     const scrollX = useSharedValue(0);
@@ -445,6 +468,36 @@ export function Calendar() {
     const cardWidth = width - 40;
     const cardGap = 12;
     const snapInterval = cardWidth + cardGap;
+    const { isDemoMode, setIsDemoMode } = useDemoMode();
+
+
+    const _handleIMPressAsync = async () => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+        await WebBrowser.warmUpAsync();
+        let link = "https://www.imleagues.com/Shibboleth.sso/Login?target=https%3a%2f%2fwww.imleagues.com%2fIntegration%2fShibboleth%2fSingleSignOn.aspx%3fType%3dSHI%26SchID%3d4e7db0d3e9cc46a581a8a8da95bb5d56&entityID=https%3a%2f%2fenterprise.login.utexas.edu%2fidp%2fshibboleth";
+        if (isDemoMode) {
+            link = "https://srirsatt.github.io/BevoFit/demoQR.html";
+        }
+        await WebBrowser.openBrowserAsync(link, {
+            dismissButtonStyle: 'close',
+            enableDefaultShareMenuItem: false,
+        });
+    }
+
+    const _handleTexPressAsync = async () => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+        await WebBrowser.warmUpAsync();
+        let link = "https://apps.rs.utexas.edu/app/myrecsports/";
+        if (isDemoMode) {
+            link = "https://srirsatt.github.io/BevoFit/demoQR.html";
+        }
+        await WebBrowser.openBrowserAsync(link, {
+            dismissButtonStyle: 'close',
+            enableDefaultShareMenuItem: false,
+        });
+    }
 
     useEffect(() => {
         async function loadClasses() {
@@ -517,6 +570,7 @@ export function Calendar() {
     // filtering by Dates from supabase!
 
     const todayClassCount = todayClasses.length;
+    const hasTodayClasses = todayClassCount > 0;
 
     useEffect(() => {
         if (loading) {
@@ -594,7 +648,7 @@ export function Calendar() {
                     <Text className="text-gray-500 dark:text-neutral-500 text-xs uppercase mt-2 mb-2">Loading...</Text>
                 )}
 
-                {!loading && todayClasses.length > 0 && (
+                {!loading && (
                     <Text className="text-gray-500 dark:text-neutral-500 text-xs uppercase mt-2 mb-2">Today's Events</Text>
                 )}
 
@@ -605,54 +659,103 @@ export function Calendar() {
                     snapToAlignment="start"
                     decelerationRate="fast"
                     disableIntervalMomentum
+                    scrollEnabled={hasTodayClasses}
                     onScroll={scrollHandler}
                     scrollEventThrottle={16}
                     style={{ width, height: CARD_HEIGHT + 32, flexGrow: 0, marginLeft: -20, marginTop: 2 }}
                     contentContainerStyle={{ paddingTop: 0, paddingBottom: 8, paddingHorizontal: 20 }}
                 >
-                    {todayClasses.map((calClass) => (
-                        <View key={calClass.id} style={{ marginRight: cardGap }}>
-                            <CalendarCard classItem={calClass} width={cardWidth} facilities={facilities} />
-                        </View>
-                    ))}
+                    {hasTodayClasses ? (
+                        todayClasses.map((calClass) => (
+                            <View key={calClass.id} style={{ marginRight: cardGap }}>
+                                <CalendarCard classItem={calClass} width={cardWidth} facilities={facilities} />
+                            </View>
+                        ))
+                    ) : (
+                        !loading && (
+                            <View style={{ marginRight: cardGap }}>
+                                <BlankCard width={cardWidth} />
+                            </View>
+                        )
+                    )}
 
                 </AnimatedScrollView>
 
-                <View
-                    style={{
-                        width: DOT_WINDOW_WIDTH,
-                        overflow: "visible",
-                        alignSelf: "center",
-                        marginTop: -14,
-                    }}
-                >
-                    <Animated.View
-                        style={[
-                            {
+                {hasTodayClasses ? (
+                    <View
+                        style={{
+                            width: DOT_WINDOW_WIDTH,
+                            overflow: "visible",
+                            alignSelf: "center",
+                            marginTop: -14,
+                        }}
+                    >
+                        <Animated.View
+                            style={[
+                                {
+                                    flexDirection: "row",
+                                    alignItems: "center",
+                                },
+                                animatedDotRowStyle,
+                            ]}
+                        >
+                            {todayClasses.map((item, index) => (
+                                <AnimatedDot
+                                    key={item.id}
+                                    index={index}
+                                    totalCount={todayClassCount}
+                                    scrollX={scrollX}
+                                    snapInterval={snapInterval}
+                                    inactiveColor={inactiveDotColor}
+                                />
+                            ))}
+
+                        </Animated.View>
+                    </View>
+                ) : (
+                    !loading && (
+                        <View
+                            style={{
+                                width: DOT_WINDOW_WIDTH,
+                                alignSelf: "center",
                                 flexDirection: "row",
                                 alignItems: "center",
-                            },
-                            animatedDotRowStyle,
-                        ]}
-                    >
-                        {todayClasses.map((item, index) => (
-                            <AnimatedDot
-                                key={item.id}
-                                index={index}
-                                totalCount={todayClassCount}
-                                scrollX={scrollX}
-                                snapInterval={snapInterval}
-                                inactiveColor={inactiveDotColor}
-                            />
-                        ))}
-
-                    </Animated.View>
-                </View>
+                                justifyContent: "center",
+                                marginTop: -14,
+                            }}
+                        >
+                            {Array.from({ length: VISIBLE_DOTS }).map((_, index) => (
+                                <View
+                                    key={index}
+                                    style={{
+                                        width: DOT_SIZE,
+                                        height: DOT_SIZE,
+                                        borderRadius: DOT_SIZE / 2,
+                                        marginRight: index === VISIBLE_DOTS - 1 ? 0 : DOT_GAP,
+                                        opacity: index === 0 || index === VISIBLE_DOTS - 1 ? 0.45 : 1,
+                                        transform: [{
+                                            scale: index === Math.floor(VISIBLE_DOTS / 2)
+                                                ? 1.2
+                                                : index === 0 || index === VISIBLE_DOTS - 1
+                                                    ? 0.65
+                                                    : 1
+                                        }],
+                                        backgroundColor: index === Math.floor(VISIBLE_DOTS / 2) ? BURNT_ORANGE : inactiveDotColor,
+                                    }}
+                                />
+                            ))}
+                        </View>
+                    )
+                )}
 
                 <View className="flex-row gap-3 mt-5 mb-4">
-                    <OrangeCard onPress={() => { }} text='IMLeagues' iconName='medal-outline' />
-                    <OrangeCard onPress={() => { }} text='TeXercise' iconName='body-outline' />
+                    <OrangeCard onPress={_handleIMPressAsync} text='IMLeagues' iconName='medal-outline' />
+                    <OrangeCard onPress={_handleTexPressAsync} text='TeXercise' iconName='body-outline' />
                 </View>
+
+                {!loading && (
+                    <Text className="text-gray-500 dark:text-neutral-500 text-xs uppercase mt-1.3 mb-2">This Week at a glance</Text>
+                )}
             </View>
         </View>
     )

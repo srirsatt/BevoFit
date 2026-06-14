@@ -97,7 +97,7 @@ export function Map() {
             address: addr,
             directionsMode: 'walk',
             title: name,
-            appsWhiteList: ['apple-maps', 'google-maps']
+            appsWhiteList: ['apple-maps']
         });
     }
 
