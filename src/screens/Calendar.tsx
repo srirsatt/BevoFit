@@ -1,6 +1,6 @@
-import { StyleSheet, Text, View, ScrollView, useWindowDimensions, Pressable, useColorScheme } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, useWindowDimensions, Pressable, useColorScheme, RefreshControl } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import Ionicons from "@expo/vector-icons/Ionicons";
 import Animated, {
@@ -19,6 +19,8 @@ import { showLocation } from 'react-native-map-link';
 import * as Haptics from "expo-haptics";
 import * as WebBrowser from 'expo-web-browser';
 import { useDemoMode } from '../contexts/DemoModeContext';
+import { BottomSheetModal, BottomSheetScrollView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
+import { FullWindowOverlay } from 'react-native-screens';
 
 
 type IoniconName = React.ComponentProps<typeof Ionicons>["name"];
@@ -61,6 +63,14 @@ type CalendarClass = {
     durationMinutes: number;
 };
 
+type WeekAtGlanceDay = {
+    day: Weekday;
+    date: Date;
+    classes: CalendarClass[];
+    isCurrentMonth: boolean;
+    isCurrentWeek: boolean;
+};
+
 const DOT_SIZE = 6;
 const DOT_GAP = 6;
 const VISIBLE_DOTS = 5;
@@ -71,6 +81,9 @@ const CARD_HEIGHT = 220;
 const TITLE_HEIGHT = 65;
 const DETAILS_HEIGHT = 70;
 const FOOTER_HEIGHT = 60;
+const SCREEN_TOP_PADDING = 24;
+const SCREEN_BOTTOM_PADDING = 80;
+const WEEKDAYS: Weekday[] = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
 function parseTimeToMinutes(time: string): number {
     const match = time.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
@@ -179,6 +192,23 @@ function translateStudioName(studio: string) {
 }
 
 // TBD checker for diff pfp
+
+function getCurrentMinutes() {
+    const now = new Date();
+    return now.getHours() * 60 + now.getMinutes();
+}
+
+function sortClassesFromCurrentTime(classes: CalendarClass[]) {
+    const currentMinutes = getCurrentMinutes();
+
+    const sortedClasses = [...classes].sort((a, b) => a.startMinutes - b.startMinutes);
+
+    const upcomingClasses = sortedClasses.filter((classItem) => classItem.endMinutes >= currentMinutes);
+
+    const pastClasses = sortedClasses.filter((classItem) => classItem.endMinutes < currentMinutes);
+
+    return [...upcomingClasses, ...pastClasses];
+}
 
 
 
@@ -354,6 +384,109 @@ const BlankCard = ({ width }: { width: number; }) => {
 
 }
 
+function getMonthAtGlanceDays(classes: CalendarClass[]) {
+    const today = new Date();
+    const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+    const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    const leadingBlankCount = monthStart.getDay();
+    const totalCells = Math.ceil((leadingBlankCount + monthEnd.getDate()) / 7) * 7;
+    const currentWeekStart = new Date(today);
+    currentWeekStart.setDate(today.getDate() - today.getDay());
+    const currentWeekEnd = new Date(currentWeekStart);
+    currentWeekEnd.setDate(currentWeekStart.getDate() + 6);
+
+    return Array.from({ length: totalCells }).map((_, index) => {
+        const date = new Date(monthStart);
+        date.setDate(monthStart.getDate() + index - leadingBlankCount);
+        const isCurrentMonth = date.getMonth() === today.getMonth();
+        const isCurrentWeek = date >= currentWeekStart && date <= currentWeekEnd;
+
+        const day = date.toLocaleDateString("en-US", {
+            weekday: "long",
+        }) as Weekday;
+
+        return {
+            day,
+            date,
+            isCurrentMonth,
+            isCurrentWeek,
+            classes: getUniqueClassesByName(
+                classes
+                    .filter((classItem) => normalizeDay(classItem.day) === normalizeDay(day))
+                    .sort((a, b) => a.startMinutes - b.startMinutes)
+            ),
+        };
+    });
+}
+
+const MonthlyDotCalendar = ({
+    days,
+    onSelectDay,
+}: {
+    days: WeekAtGlanceDay[];
+    onSelectDay: (day: WeekAtGlanceDay) => void;
+}) => {
+    const monthLabel = new Date().toLocaleDateString("en-US", {
+        month: "long",
+        year: "numeric",
+    });
+
+    return (
+        <View className="bg-white dark:bg-[#0D0D0F] rounded-2xl border border-[#E5E5E5] dark:border-[#2A2A2D] px-5 py-5 mb-4">
+            <View className="flex-row items-center justify-between mb-4">
+                <Text className="text-gray-900 dark:text-white text-2xl font-extrabold">
+                    {monthLabel}
+                </Text>
+                <Text className="text-gray-500 dark:text-neutral-500 text-xs uppercase font-extrabold">
+                    Current week
+                </Text>
+            </View>
+
+            <View className="flex-row mb-3">
+                {["S", "M", "T", "W", "T", "F", "S"].map((label, index) => (
+                    <Text key={`${label}-${index}`} className="text-gray-500 dark:text-neutral-500 text-xs font-extrabold text-center flex-1">
+                        {label}
+                    </Text>
+                ))}
+            </View>
+
+            <View className="flex-row flex-wrap">
+                {days.map((dayItem) => {
+                    const classCount = dayItem.classes.length;
+                    const isWeekend = dayItem.date.getDay() === 0 || dayItem.date.getDay() === 6;
+                    const isDisabled = !dayItem.isCurrentMonth || isWeekend || classCount === 0;
+                    const dotSize = 10;
+
+                    return (
+                        <Pressable
+                            key={`${dayItem.day}-${dayItem.date.toDateString()}`}
+                            onPress={() => {
+                                if (isDisabled) return;
+                                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                onSelectDay(dayItem);
+                            }}
+                            disabled={isDisabled}
+                            style={{ width: `${100 / 7}%`, height: 44 }}
+                            className="items-center justify-center"
+                        >
+                            {dayItem.isCurrentMonth ? (
+                                <View
+                                    style={{
+                                        width: dotSize,
+                                        height: dotSize,
+                                        borderRadius: dotSize / 2,
+                                        opacity: classCount === 0 || isWeekend ? 0.25 : 1,
+                                    }}
+                                    className={dayItem.isCurrentWeek ? "bg-[#BF5700]" : "bg-gray-900 dark:bg-white"}
+                                />
+                            ) : null}
+                        </Pressable>
+                    );
+                })}
+            </View>
+        </View>
+    )
+}
 
 
 const OrangeCard = ({ onPress, text, iconName }: { onPress: () => void; text: string; iconName: IoniconName }) => {
@@ -451,6 +584,21 @@ function AnimatedDot({
     );
 }
 
+function getUniqueClassesByName(classes: CalendarClass[]) {
+    const seenNames = new Set<string>();
+
+    return classes.filter((classItem) => {
+        const normalizedName = classItem.name.trim().toLowerCase();
+
+        if (seenNames.has(normalizedName)) {
+            return false;
+        }
+
+        seenNames.add(normalizedName);
+        return true;
+    });
+}
+
 const AnimatedScrollView = Animated.createAnimatedComponent(ScrollView);
 
 
@@ -460,7 +608,10 @@ export function Calendar() {
     const [calendarClasses, setCalendarClasses] = useState<CalendarClass[]>([]);
     const scrollX = useSharedValue(0);
     const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
     const [facilities, setFacilities] = useState<FacilityMarker[]>([]);
+    const [selectedWeekDay, setSelectedWeekDay] = useState<WeekAtGlanceDay | null>(null);
+    const weekSheetRef = useRef<BottomSheetModal>(null);
     const colorScheme = useColorScheme();
     const isDarkMode = colorScheme === "dark";
     const inactiveDotColor = isDarkMode ? "#525252" : "#D4D4D4";
@@ -469,6 +620,17 @@ export function Calendar() {
     const cardGap = 12;
     const snapInterval = cardWidth + cardGap;
     const { isDemoMode, setIsDemoMode } = useDemoMode();
+    const weekSheetSnapPoints = useMemo(() => ["45%", "70%"], []);
+    const monthAtGlanceDays = useMemo(() => getMonthAtGlanceDays(calendarClasses), [calendarClasses]);
+
+    const renderWeekSheetBackdrop = useCallback((props: React.ComponentProps<typeof BottomSheetBackdrop>) => (
+        <BottomSheetBackdrop {...props} appearsOnIndex={0} disappearsOnIndex={-1} pressBehavior="close" />
+    ), []);
+
+    const openWeekDaySheet = useCallback((day: WeekAtGlanceDay) => {
+        setSelectedWeekDay(day);
+        weekSheetRef.current?.present();
+    }, []);
 
 
     const _handleIMPressAsync = async () => {
@@ -499,56 +661,89 @@ export function Calendar() {
         });
     }
 
-    useEffect(() => {
-        async function loadClasses() {
+    const loadClasses = useCallback(async ({ showLoading = false } = {}) => {
+        if (showLoading) {
             setLoading(true);
+        }
 
-            try {
-                const { data, error } = await supabase
-                    .from("classes")
-                    .select("id, day, time, name, studio, instructor, activity_type")
-
-
-                if (error) {
-                    console.error("[Calendar] Supabase classes query failed", error);
-                    setLoading(false);
-                    return;
-                }
+        try {
+            const { data, error } = await supabase
+                .from("classes")
+                .select("id, day, time, name, studio, instructor, activity_type")
 
 
-                console.log("[Calendar] Supabase classes loaded", {
-                    rowCount: data?.length ?? 0,
-                });
+            if (error) {
+                console.error("[Calendar] Supabase classes query failed", error);
+                return;
+            }
 
-                const calendarCardObjects: CalendarClass[] = (data ?? [])
-                    .flatMap((row) => {
-                        try {
-                            return [toCalendarClass(row)];
-                        } catch (err) {
-                            console.error("[Calendar] Skipping class with invalid data", {
-                                row,
-                                error: err,
-                            });
-                            return [];
-                        }
-                    })
-                    .sort((a, b) => a.startMinutes - b.startMinutes);
 
-                console.log("[Calendar] Calendar cards prepared", {
-                    cardCount: calendarCardObjects.length,
-                    skippedCount: (data?.length ?? 0) - calendarCardObjects.length,
-                    dayCounts: getDayCounts(calendarCardObjects),
-                });
+            console.log("[Calendar] Supabase classes loaded", {
+                rowCount: data?.length ?? 0,
+            });
 
-                setCalendarClasses(calendarCardObjects);
-            } catch (err) {
-                console.error("[Calendar] Unexpected error while loading classes", err);
-            } finally {
+            const calendarCardObjects: CalendarClass[] = (data ?? [])
+                .flatMap((row) => {
+                    try {
+                        return [toCalendarClass(row)];
+                    } catch (err) {
+                        console.error("[Calendar] Skipping class with invalid data", {
+                            row,
+                            error: err,
+                        });
+                        return [];
+                    }
+                })
+                .sort((a, b) => a.startMinutes - b.startMinutes);
+
+            console.log("[Calendar] Calendar cards prepared", {
+                cardCount: calendarCardObjects.length,
+                skippedCount: (data?.length ?? 0) - calendarCardObjects.length,
+                dayCounts: getDayCounts(calendarCardObjects),
+            });
+
+            setCalendarClasses(calendarCardObjects);
+        } catch (err) {
+            console.error("[Calendar] Unexpected error while loading classes", err);
+        } finally {
+            if (showLoading) {
                 setLoading(false);
             }
         }
-        loadClasses();
     }, []);
+
+    const loadFacilities = useCallback(async () => {
+        const { data, error } = await supabase
+            .from("facilities")
+            .select("id, name, lat, lng, general_info, addr")
+            .not("lat", "is", null)
+            .not("lng", "is", null);
+
+        if (error) {
+            console.error("cal err loading faciliites", error);
+            setFacilities([]);
+            return;
+        }
+
+        setFacilities((data ?? []) as FacilityMarker[]);
+    }, []);
+
+    const onRefresh = useCallback(async () => {
+        setRefreshing(true);
+        try {
+            await Promise.all([
+                loadClasses(),
+                loadFacilities(),
+            ]);
+        } finally {
+            setRefreshing(false);
+        }
+    }, [loadClasses, loadFacilities]);
+
+    useEffect(() => {
+        loadClasses({ showLoading: true });
+        loadFacilities();
+    }, [loadClasses, loadFacilities]);
 
     const scrollHandler = useAnimatedScrollHandler({
         onScroll: (event) => {
@@ -564,9 +759,9 @@ export function Calendar() {
         })
     ); // Monday - Sunday declaration
 
-    const todayClasses = calendarClasses
+    const todayClasses = sortClassesFromCurrentTime(calendarClasses
         .filter((item) => normalizeDay(item.day) === today)
-        .sort((a, b) => a.startMinutes - b.startMinutes);
+        .sort((a, b) => a.startMinutes - b.startMinutes));
     // filtering by Dates from supabase!
 
     const todayClassCount = todayClasses.length;
@@ -591,26 +786,6 @@ export function Calendar() {
             });
         }
     }, [calendarClasses, loading, today, todayClassCount]);
-
-    useEffect(() => {
-        async function loadFacilities() {
-            const { data, error } = await supabase
-                .from("facilities")
-                .select("id, name, lat, lng, general_info, addr")
-                .not("lat", "is", null)
-                .not("lng", "is", null);
-
-            if (error) {
-                console.error("cal err loading faciliites", error);
-                setFacilities([]);
-                return;
-            }
-
-            setFacilities((data ?? []) as FacilityMarker[]);
-        }
-
-        loadFacilities();
-    }, []);
 
     const animatedDotRowStyle = useAnimatedStyle(() => {
         const progress = scrollX.value / snapInterval;
@@ -637,126 +812,194 @@ export function Calendar() {
         <View
             style={{
                 flex: 1,
-                paddingTop: insets.top,
+                paddingTop: insets.top + SCREEN_TOP_PADDING,
             }}
             className="bg-white dark:bg-black"
         >
-            <View className="flex-1 w-full px-5 mt-4 mb-2">
-                <Text className="text-gray-900 dark:text-white text-5xl mt-2 font-extrabold">Calendar</Text>
+            <ScrollView
+                style={{ flex: 1 }}
+                contentContainerStyle={{
+                    paddingBottom: insets.bottom + SCREEN_BOTTOM_PADDING,
+                }}
+                automaticallyAdjustContentInsets={false}
+                contentInsetAdjustmentBehavior="never"
+                contentInset={{ top: 0, bottom: 0, left: 0, right: 0 }}
+                scrollIndicatorInsets={{ top: 0, bottom: 0, left: 0, right: 0 }}
+                bounces
+                alwaysBounceVertical
+                overScrollMode="always"
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                        tintColor={BURNT_ORANGE}
+                        colors={[BURNT_ORANGE]}
+                    />
+                }
+            >
+                <View className="w-full px-5">
+                    <Text className="text-gray-900 dark:text-white text-5xl font-extrabold">Calendar</Text>
 
-                {loading && (
-                    <Text className="text-gray-500 dark:text-neutral-500 text-xs uppercase mt-2 mb-2">Loading...</Text>
-                )}
+                    {loading && (
+                        <Text className="text-gray-500 dark:text-neutral-500 text-xs uppercase mt-2 mb-2">Loading...</Text>
+                    )}
 
-                {!loading && (
-                    <Text className="text-gray-500 dark:text-neutral-500 text-xs uppercase mt-2 mb-2">Today's Events</Text>
-                )}
+                    {!loading && (
+                        <Text className="text-gray-500 dark:text-neutral-500 text-xs uppercase mt-2 mb-2">Today's Events</Text>
+                    )}
 
-                <AnimatedScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    snapToInterval={cardWidth + cardGap}
-                    snapToAlignment="start"
-                    decelerationRate="fast"
-                    disableIntervalMomentum
-                    scrollEnabled={hasTodayClasses}
-                    onScroll={scrollHandler}
-                    scrollEventThrottle={16}
-                    style={{ width, height: CARD_HEIGHT + 32, flexGrow: 0, marginLeft: -20, marginTop: 2 }}
-                    contentContainerStyle={{ paddingTop: 0, paddingBottom: 8, paddingHorizontal: 20 }}
-                >
+                    <AnimatedScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        snapToInterval={cardWidth + cardGap}
+                        snapToAlignment="start"
+                        decelerationRate="fast"
+                        disableIntervalMomentum
+                        scrollEnabled={hasTodayClasses}
+                        onScroll={scrollHandler}
+                        scrollEventThrottle={16}
+                        style={{ width, height: CARD_HEIGHT + 32, flexGrow: 0, marginLeft: -20, marginTop: 2 }}
+                        contentContainerStyle={{ paddingTop: 0, paddingBottom: 8, paddingHorizontal: 20 }}
+                    >
+                        {hasTodayClasses ? (
+                            todayClasses.map((calClass) => (
+                                <View key={calClass.id} style={{ marginRight: cardGap }}>
+                                    <CalendarCard classItem={calClass} width={cardWidth} facilities={facilities} />
+                                </View>
+                            ))
+                        ) : (
+                            !loading && (
+                                <View style={{ marginRight: cardGap }}>
+                                    <BlankCard width={cardWidth} />
+                                </View>
+                            )
+                        )}
+
+                    </AnimatedScrollView>
+
                     {hasTodayClasses ? (
-                        todayClasses.map((calClass) => (
-                            <View key={calClass.id} style={{ marginRight: cardGap }}>
-                                <CalendarCard classItem={calClass} width={cardWidth} facilities={facilities} />
-                            </View>
-                        ))
+                        <View
+                            style={{
+                                width: DOT_WINDOW_WIDTH,
+                                overflow: "visible",
+                                alignSelf: "center",
+                                marginTop: -14,
+                            }}
+                        >
+                            <Animated.View
+                                style={[
+                                    {
+                                        flexDirection: "row",
+                                        alignItems: "center",
+                                    },
+                                    animatedDotRowStyle,
+                                ]}
+                            >
+                                {todayClasses.map((item, index) => (
+                                    <AnimatedDot
+                                        key={item.id}
+                                        index={index}
+                                        totalCount={todayClassCount}
+                                        scrollX={scrollX}
+                                        snapInterval={snapInterval}
+                                        inactiveColor={inactiveDotColor}
+                                    />
+                                ))}
+
+                            </Animated.View>
+                        </View>
                     ) : (
                         !loading && (
-                            <View style={{ marginRight: cardGap }}>
-                                <BlankCard width={cardWidth} />
+                            <View
+                                style={{
+                                    width: DOT_WINDOW_WIDTH,
+                                    alignSelf: "center",
+                                    flexDirection: "row",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    marginTop: -14,
+                                }}
+                            >
+                                {Array.from({ length: VISIBLE_DOTS }).map((_, index) => (
+                                    <View
+                                        key={index}
+                                        style={{
+                                            width: DOT_SIZE,
+                                            height: DOT_SIZE,
+                                            borderRadius: DOT_SIZE / 2,
+                                            marginRight: index === VISIBLE_DOTS - 1 ? 0 : DOT_GAP,
+                                            opacity: index === 0 || index === VISIBLE_DOTS - 1 ? 0.45 : 1,
+                                            transform: [{
+                                                scale: index === Math.floor(VISIBLE_DOTS / 2)
+                                                    ? 1.2
+                                                    : index === 0 || index === VISIBLE_DOTS - 1
+                                                        ? 0.65
+                                                        : 1
+                                            }],
+                                            backgroundColor: index === Math.floor(VISIBLE_DOTS / 2) ? BURNT_ORANGE : inactiveDotColor,
+                                        }}
+                                    />
+                                ))}
                             </View>
                         )
                     )}
 
-                </AnimatedScrollView>
-
-                {hasTodayClasses ? (
-                    <View
-                        style={{
-                            width: DOT_WINDOW_WIDTH,
-                            overflow: "visible",
-                            alignSelf: "center",
-                            marginTop: -14,
-                        }}
-                    >
-                        <Animated.View
-                            style={[
-                                {
-                                    flexDirection: "row",
-                                    alignItems: "center",
-                                },
-                                animatedDotRowStyle,
-                            ]}
-                        >
-                            {todayClasses.map((item, index) => (
-                                <AnimatedDot
-                                    key={item.id}
-                                    index={index}
-                                    totalCount={todayClassCount}
-                                    scrollX={scrollX}
-                                    snapInterval={snapInterval}
-                                    inactiveColor={inactiveDotColor}
-                                />
-                            ))}
-
-                        </Animated.View>
+                    <View className="flex-row gap-3 mt-5 mb-4">
+                        <OrangeCard onPress={_handleIMPressAsync} text='IMLeagues' iconName='medal-outline' />
+                        <OrangeCard onPress={_handleTexPressAsync} text='TeXercise' iconName='body-outline' />
                     </View>
-                ) : (
-                    !loading && (
-                        <View
-                            style={{
-                                width: DOT_WINDOW_WIDTH,
-                                alignSelf: "center",
-                                flexDirection: "row",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                marginTop: -14,
-                            }}
-                        >
-                            {Array.from({ length: VISIBLE_DOTS }).map((_, index) => (
-                                <View
-                                    key={index}
-                                    style={{
-                                        width: DOT_SIZE,
-                                        height: DOT_SIZE,
-                                        borderRadius: DOT_SIZE / 2,
-                                        marginRight: index === VISIBLE_DOTS - 1 ? 0 : DOT_GAP,
-                                        opacity: index === 0 || index === VISIBLE_DOTS - 1 ? 0.45 : 1,
-                                        transform: [{
-                                            scale: index === Math.floor(VISIBLE_DOTS / 2)
-                                                ? 1.2
-                                                : index === 0 || index === VISIBLE_DOTS - 1
-                                                    ? 0.65
-                                                    : 1
-                                        }],
-                                        backgroundColor: index === Math.floor(VISIBLE_DOTS / 2) ? BURNT_ORANGE : inactiveDotColor,
-                                    }}
-                                />
+
+                    {!loading && (
+                        <Text className="text-gray-500 dark:text-neutral-500 text-xs uppercase mt-1.3 mb-3">This Week at a glance</Text>
+                    )}
+
+                    <MonthlyDotCalendar days={monthAtGlanceDays} onSelectDay={openWeekDaySheet} />
+                </View>
+            </ScrollView>
+
+            <FullWindowOverlay>
+                <BottomSheetModal
+                    ref={weekSheetRef}
+                    snapPoints={weekSheetSnapPoints}
+                    backdropComponent={renderWeekSheetBackdrop}
+                    backgroundStyle={{ backgroundColor: isDarkMode ? '#0D0D0F' : '#FFFFFF', borderTopLeftRadius: 20, borderTopRightRadius: 20 }}
+                    handleIndicatorStyle={{ backgroundColor: isDarkMode ? 'white' : '#D4D4D4', width: '10%', height: 5 }}
+                    enableDynamicSizing={false}
+                >
+                    <BottomSheetScrollView>
+                        <View className="px-7 pt-3 pb-8">
+                            <Text className="text-gray-900 dark:text-white text-4xl font-extrabold">
+                                {selectedWeekDay?.date.toLocaleDateString("en-US", {
+                                    weekday: "long",
+                                    month: "long",
+                                    day: "numeric",
+                                })}
+                            </Text>
+                            <Text className="text-[#BF5700] text-lg font-extrabold mt-1">
+                                {selectedWeekDay?.classes.length ?? 0} {(selectedWeekDay?.classes.length ?? 0) === 1 ? "class" : "classes"}
+                            </Text>
+
+                            <View className="h-px bg-[#E5E5E5] dark:bg-[#2A2A2D] my-5" />
+
+                            {selectedWeekDay?.classes.map((classItem) => (
+                                <View key={classItem.id} className="flex-row items-start mb-4">
+                                    <Text className="text-gray-500 dark:text-neutral-500 text-base font-extrabold w-24">
+                                        {classItem.startLabel}
+                                    </Text>
+                                    <View className="flex-1">
+                                        <Text className="text-gray-900 dark:text-white text-lg font-extrabold">
+                                            {classItem.name}
+                                        </Text>
+                                        <Text className="text-gray-500 dark:text-neutral-500 text-sm font-semibold mt-1">
+                                            {translateStudioName(classItem.studio)}
+                                        </Text>
+                                    </View>
+                                </View>
                             ))}
                         </View>
-                    )
-                )}
-
-                <View className="flex-row gap-3 mt-5 mb-4">
-                    <OrangeCard onPress={_handleIMPressAsync} text='IMLeagues' iconName='medal-outline' />
-                    <OrangeCard onPress={_handleTexPressAsync} text='TeXercise' iconName='body-outline' />
-                </View>
-
-                {!loading && (
-                    <Text className="text-gray-500 dark:text-neutral-500 text-xs uppercase mt-1.3 mb-2">This Week at a glance</Text>
-                )}
-            </View>
+                    </BottomSheetScrollView>
+                </BottomSheetModal>
+            </FullWindowOverlay>
         </View>
     )
 }

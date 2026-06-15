@@ -95,7 +95,6 @@ export default function TabLayout() {
             <>
               <NativeTabHaptics />
               <NativeTabs
-                minimizeBehavior="onScrollDown"
                 tintColor='#BF5700'
               >
                 <NativeTabs.Trigger name="index">
