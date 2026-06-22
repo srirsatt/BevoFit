@@ -19,6 +19,7 @@ import { FullWindowOverlay } from 'react-native-screens';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { formatInTimeZone } from 'date-fns-tz';
 import { useDemoMode } from '../contexts/DemoModeContext';
+import { isFacilityOpen, type FacilityHours } from '../lib/facilityHours';
 import * as Application from 'expo-application';
 
 export async function getFacilitiesMinimal() {
@@ -71,19 +72,7 @@ type FacilityRow = {
   general_info: string;
   facility_features: string[];
   facility_activities: string[];
-};
-
-type FacilityHours = {
-  mon?: string | null;
-  tue?: string | null;
-  wed?: string | null;
-  thu?: string | null;
-  fri?: string | null;
-  sat?: string | null;
-  sun?: string | null;
-  special_date?: string | null;   // "YYYY-MM-DD"
-  special_hours?: string | null;
-};
+}
 
 type FacilityWithHours = FacilityRow & {
   hours?: FacilityHours | null;
@@ -178,59 +167,6 @@ async function getSavedReport(facilityId: string): Promise<number | null> {
 }
 
 // Main function to check if facility is currently open
-export function isFacilityOpen(hours: FacilityHours | null | undefined): { isOpen: boolean, minutesLeft: number | null } {
-  if (!hours) return { isOpen: false, minutesLeft: null };
-
-  // 1. Get current time in Austin (Central Time)
-  const now = new Date();
-  const austinTimeZone = 'America/Chicago';
-
-  // 2. Get current day of week (0 = Sunday, 1 = Monday, etc.)
-  const dayOfWeek = parseInt(formatInTimeZone(now, austinTimeZone, 'i')); // 1-7 (Mon-Sun)
-  const currentTime = formatInTimeZone(now, austinTimeZone, 'HH:mm'); // "14:30"
-
-  // 3. Check for special hours first (overrides regular hours)
-  if (hours.special_date && hours.special_hours) {
-    const todayDate = formatInTimeZone(now, austinTimeZone, 'yyyy-MM-dd');
-    if (todayDate === hours.special_date) {
-      if (hours.special_hours.toLowerCase() === 'closed') return { isOpen: false, minutesLeft: null };
-      return isTimeInRange(currentTime, hours.special_hours);
-    }
-  }
-
-
-  // 4. Get today's hours string based on day of week
-  let todayHours: string | null | undefined;
-
-  if (dayOfWeek === 7) {
-    // Sunday
-    todayHours = hours.sun;
-  } else if (dayOfWeek === 6) {
-    // Saturday
-    todayHours = hours.sat;
-  } else if (dayOfWeek === 5) {
-    // Friday
-    todayHours = hours.fri;
-  } else {
-    // Monday-Thursday
-    todayHours = hours.mon || hours.tue || hours.wed || hours.thu;
-  }
-
-  // 5. Check if closed or no hours
-  if (!todayHours || todayHours.toLowerCase().includes('closed')) {
-    return { isOpen: false, minutesLeft: null };
-  }
-
-  // 6. Parse hours and check if current time is in range
-  const intervals = parseIntervals(todayHours);
-  for (const interval of intervals) {
-    const result = isTimeInRange(currentTime, interval);
-
-    if (result.isOpen) return result;
-  }
-
-  return { isOpen: false, minutesLeft: null };
-}
 
 function parseIntervals(hoursStr?: string | null): string[] {
   if (!hoursStr) return [];
