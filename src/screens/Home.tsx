@@ -19,7 +19,7 @@ import { FullWindowOverlay } from 'react-native-screens';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { formatInTimeZone } from 'date-fns-tz';
 import { useDemoMode } from '../contexts/DemoModeContext';
-import { isFacilityOpen, type FacilityHours } from '../lib/facilityHours';
+import { isFacilityOpen, parseIntervals, type FacilityHours } from '../lib/facilityHours';
 import * as Application from 'expo-application';
 
 export async function getFacilitiesMinimal() {
@@ -80,6 +80,7 @@ type FacilityWithHours = FacilityRow & {
 };
 
 // Helper function to convert 12-hour time to 24-hour format
+/*
 function convertTo24Hour(hour: number, minute: number, period: string): string {
   let hour24 = hour;
 
@@ -91,6 +92,7 @@ function convertTo24Hour(hour: number, minute: number, period: string): string {
 
   return `${hour24.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
 }
+
 
 // Helper function to check if current time is within a time range
 function isTimeInRange(currentTime: string, hoursString: string): { isOpen: boolean, minutesLeft: number | null } {
@@ -135,6 +137,8 @@ function isTimeInRange(currentTime: string, hoursString: string): { isOpen: bool
   }
 }
 
+*/
+
 // helper function for today's reports from AsyncStor
 
 function getTodayKey(): string {
@@ -168,6 +172,7 @@ async function getSavedReport(facilityId: string): Promise<number | null> {
 
 // Main function to check if facility is currently open
 
+/*
 function parseIntervals(hoursStr?: string | null): string[] {
   if (!hoursStr) return [];
   const s = hoursStr.trim();
@@ -178,6 +183,8 @@ function parseIntervals(hoursStr?: string | null): string[] {
     .map(part => part.trim())
     .filter(Boolean);
 }
+
+*/
 
 async function upsertBusynessreport(facilityId: string, deviceId: string, level: number) {
   const { error } = await supabase

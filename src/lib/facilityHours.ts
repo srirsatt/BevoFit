@@ -68,7 +68,7 @@ function isTimeInRange(currentTime: string, hoursString: string): { isOpen: bool
 }
 
 
-function parseIntervals(hoursStr?: string | null): string[] {
+export function parseIntervals(hoursStr?: string | null): string[] {
   if (!hoursStr) return [];
   const s = hoursStr.trim();
   if (!s || s.toLowerCase().includes('closed')) return [];

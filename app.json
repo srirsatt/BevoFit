@@ -49,7 +49,9 @@
       "expo-web-browser",
       "expo-router",
       "react-native-vision-camera",
-      "expo-maps"
+      "expo-maps",
+      "expo-location",
+      "expo-notifications"
     ],
     "extra": {
       "eas": {
