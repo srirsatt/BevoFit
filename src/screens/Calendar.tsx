@@ -83,7 +83,7 @@ const DETAILS_HEIGHT = 70;
 const FOOTER_HEIGHT = 60;
 const SCREEN_TOP_PADDING = 24;
 const SCREEN_BOTTOM_PADDING = 80;
-const WEEKDAYS: Weekday[] = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+const WEEKDAYS: Weekday[] = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 function parseTimeToMinutes(time: string): number {
     const match = time.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
@@ -384,32 +384,27 @@ const BlankCard = ({ width }: { width: number; }) => {
 
 }
 
-function getMonthAtGlanceDays(classes: CalendarClass[]) {
+function formatWeekRange(start: Date, end: Date) {
+    const format = (date: Date) => `${String(date.getMonth() + 1).padStart(2, "0")}/${String(date.getDate()).padStart(2, "0")}`;
+    return `${format(start)} - ${format(end)}`;
+}
+
+function getWeekAtGlanceDays(classes: CalendarClass[]) {
     const today = new Date();
-    const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-    const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-    const leadingBlankCount = monthStart.getDay();
-    const totalCells = Math.ceil((leadingBlankCount + monthEnd.getDate()) / 7) * 7;
-    const currentWeekStart = new Date(today);
-    currentWeekStart.setDate(today.getDate() - today.getDay());
-    const currentWeekEnd = new Date(currentWeekStart);
-    currentWeekEnd.setDate(currentWeekStart.getDate() + 6);
+    const weekStart = new Date(today);
+    weekStart.setHours(0, 0, 0, 0);
+    weekStart.setDate(today.getDate() - today.getDay());
 
-    return Array.from({ length: totalCells }).map((_, index) => {
-        const date = new Date(monthStart);
-        date.setDate(monthStart.getDate() + index - leadingBlankCount);
+    return WEEKDAYS.map((day, index) => {
+        const date = new Date(weekStart);
+        date.setDate(weekStart.getDate() + index);
         const isCurrentMonth = date.getMonth() === today.getMonth();
-        const isCurrentWeek = date >= currentWeekStart && date <= currentWeekEnd;
-
-        const day = date.toLocaleDateString("en-US", {
-            weekday: "long",
-        }) as Weekday;
 
         return {
             day,
             date,
             isCurrentMonth,
-            isCurrentWeek,
+            isCurrentWeek: true,
             classes: getUniqueClassesByName(
                 classes
                     .filter((classItem) => normalizeDay(classItem.day) === normalizeDay(day))
@@ -419,30 +414,37 @@ function getMonthAtGlanceDays(classes: CalendarClass[]) {
     });
 }
 
-const MonthlyDotCalendar = ({
+const WeekAtGlanceCard = ({
     days,
     onSelectDay,
 }: {
     days: WeekAtGlanceDay[];
     onSelectDay: (day: WeekAtGlanceDay) => void;
 }) => {
-    const monthLabel = new Date().toLocaleDateString("en-US", {
+    const today = new Date();
+    const monthLabel = today.toLocaleDateString("en-US", {
         month: "long",
         year: "numeric",
     });
+    const weekStart = days[0]?.date ?? today;
+    const weekEnd = days[days.length - 1]?.date ?? today;
 
     return (
-        <View className="bg-white dark:bg-[#0D0D0F] rounded-2xl border border-[#E5E5E5] dark:border-[#2A2A2D] px-5 py-5 mb-4">
-            <View className="flex-row items-center justify-between mb-4">
+        <View className="bg-white dark:bg-[#0D0D0F] rounded-2xl border border-[#E5E5E5] dark:border-[#2A2A2D] px-5 pt-5 pb-6 mb-4">
+            <View className="flex-row items-start justify-between">
                 <Text className="text-gray-900 dark:text-white text-2xl font-extrabold">
                     {monthLabel}
                 </Text>
-                <Text className="text-gray-500 dark:text-neutral-500 text-xs uppercase font-extrabold">
+                <Text className="text-gray-500 dark:text-neutral-500 text-xs uppercase font-extrabold mt-2">
                     Current week
                 </Text>
             </View>
 
-            <View className="flex-row mb-3">
+            <Text className="text-gray-500 dark:text-neutral-500 text-sm font-bold mt-2 mb-5">
+                {formatWeekRange(weekStart, weekEnd)}
+            </Text>
+
+            <View className="flex-row mb-4">
                 {["S", "M", "T", "W", "T", "F", "S"].map((label, index) => (
                     <Text key={`${label}-${index}`} className="text-gray-500 dark:text-neutral-500 text-xs font-extrabold text-center flex-1">
                         {label}
@@ -450,36 +452,25 @@ const MonthlyDotCalendar = ({
                 ))}
             </View>
 
-            <View className="flex-row flex-wrap">
+            <View className="flex-row">
                 {days.map((dayItem) => {
-                    const classCount = dayItem.classes.length;
-                    const isWeekend = dayItem.date.getDay() === 0 || dayItem.date.getDay() === 6;
-                    const isDisabled = !dayItem.isCurrentMonth || isWeekend || classCount === 0;
-                    const dotSize = 10;
-
                     return (
                         <Pressable
                             key={`${dayItem.day}-${dayItem.date.toDateString()}`}
                             onPress={() => {
-                                if (isDisabled) return;
                                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                                 onSelectDay(dayItem);
                             }}
-                            disabled={isDisabled}
-                            style={{ width: `${100 / 7}%`, height: 44 }}
+                            style={{ width: `${100 / 7}%`, height: 34 }}
                             className="items-center justify-center"
                         >
-                            {dayItem.isCurrentMonth ? (
-                                <View
-                                    style={{
-                                        width: dotSize,
-                                        height: dotSize,
-                                        borderRadius: dotSize / 2,
-                                        opacity: classCount === 0 || isWeekend ? 0.25 : 1,
-                                    }}
-                                    className={dayItem.isCurrentWeek ? "bg-[#BF5700]" : "bg-gray-900 dark:bg-white"}
-                                />
-                            ) : null}
+                            {dayItem.classes.length > 0 ? (
+                                <Text className="text-[#BF5700] text-lg font-bold text-center">
+                                    {dayItem.classes.length}
+                                </Text>
+                            ) : (
+                                <View className="w-2.5 h-2.5 rounded-full bg-[#BF5700]" />
+                            )}
                         </Pressable>
                     );
                 })}
@@ -621,7 +612,7 @@ export function Calendar() {
     const snapInterval = cardWidth + cardGap;
     const { isDemoMode, setIsDemoMode } = useDemoMode();
     const weekSheetSnapPoints = useMemo(() => ["45%", "70%"], []);
-    const monthAtGlanceDays = useMemo(() => getMonthAtGlanceDays(calendarClasses), [calendarClasses]);
+    const weekAtGlanceDays = useMemo(() => getWeekAtGlanceDays(calendarClasses), [calendarClasses]);
 
     const renderWeekSheetBackdrop = useCallback((props: React.ComponentProps<typeof BottomSheetBackdrop>) => (
         <BottomSheetBackdrop {...props} appearsOnIndex={0} disappearsOnIndex={-1} pressBehavior="close" />
@@ -953,7 +944,7 @@ export function Calendar() {
                         <Text className="text-gray-500 dark:text-neutral-500 text-xs uppercase mt-1.3 mb-3">This Week at a glance</Text>
                     )}
 
-                    <MonthlyDotCalendar days={monthAtGlanceDays} onSelectDay={openWeekDaySheet} />
+                    <WeekAtGlanceCard days={weekAtGlanceDays} onSelectDay={openWeekDaySheet} />
                 </View>
             </ScrollView>
 
