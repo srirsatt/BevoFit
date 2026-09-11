@@ -6,11 +6,13 @@ import {
 } from './facilityNotifications';
 
 
-export const FACILITY_RADIUS_METERS = 150;
 
 export type ProximityFacility = NotificationFacility & {
     lat: number;
     lng: number;
+    geofence_radius_meters: number;
+    notifications_enabled: boolean;
+    priority: number | null;
 }; 
 
 export async function loadProximityFacilities(): Promise<ProximityFacility[]> {
@@ -25,10 +27,17 @@ export async function loadProximityFacilities(): Promise<ProximityFacility[]> {
             lng,
             facility_type,
             notification_title,
-            notification_body
+            notification_body,
+            geofence_radius_meters,
+            notifications_enabled,
+            priority
         `)
+        .eq('notifications_enabled', true)
         .not('lat', 'is', null)
         .not('lng', 'is', null)
+        .gt('geofence_radius_meters', 0)
+        .order('priority', { ascending: false, nullsFirst: false });
+
 
     if (error) throw error;
 
@@ -37,7 +46,8 @@ export async function loadProximityFacilities(): Promise<ProximityFacility[]> {
             Number.isFinite(facility.lat) &&
             Number.isFinite(facility.lng) &&
             Math.abs(facility.lat) <= 90 &&
-            Math.abs(facility.lng) <= 180
+            Math.abs(facility.lng) <= 180 &&
+            Number.isFinite(facility.geofence_radius_meters) && facility.geofence_radius_meters > 0
     );
 }
 
@@ -54,6 +64,7 @@ export async function handleFacilityEntry(facilityId: string): Promise<boolean> 
             notification_body
         `)
         .eq('id', facilityId)
+        .eq('notifications_enabled', true)
         .maybeSingle();
 
     if (facilityError) throw facilityError;
