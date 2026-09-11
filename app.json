@@ -50,7 +50,14 @@
       "expo-router",
       "react-native-vision-camera",
       "expo-maps",
-      "expo-location",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "BevoFit uses your location to find nearby recreational facilities.",
+          "locationAlwaysAndWhenInUsePermission": "BevoFit uses your location in the background to notify you when you arrive near an open UT recreational facility.",
+          "isIosBackgroundLocationEnabled": true
+        }
+      ],
       "expo-notifications"
     ],
     "extra": {

@@ -1,6 +1,15 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
 
+Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+        shouldShowBanner: true,
+        shouldShowList: true,
+        shouldPlaySound: false,
+        shouldSetBadge: false,
+    }),
+});
+
 const FACILITY_NOTIFICATION_HISTORY_KEY = 'nearby_facility_notification_history';
 const FACILITY_COOLDOWN_MS = 60 * 60 * 1000; // 1 hr
 
@@ -20,6 +29,33 @@ type FacilityNotificationContent = {
 type NotificationHistory = Record<string, number>;
 
 // get noti perms
+
+// backgroudn task to just verify noti perms - so we dont need a pop up if its alr disabled on an OS level
+export async function hasNotificationPermission(): Promise<boolean> {
+    const permissions = await Notifications.getPermissionsAsync();
+
+    return (
+        permissions.granted || permissions.ios?.status === Notifications.IosAuthorizationStatus.PROVISIONAL
+    );
+}
+
+export async function requestNotificationPermissions(): Promise<boolean> {
+    if (await hasNotificationPermission()) return true;
+
+    const current = await Notifications.getPermissionsAsync();
+
+    if (!current.canAskAgain) return false;
+
+    const requested = await Notifications.requestPermissionsAsync();
+
+    return (
+        requested.granted || requested.ios?.status === Notifications.IosAuthorizationStatus.PROVISIONAL
+    );
+}
+
+
+
+/*
 export async function requestNotificationPermissions(): Promise<boolean> {
     const currentPermissions = await Notifications.getPermissionsAsync();
 
@@ -35,6 +71,8 @@ export async function requestNotificationPermissions(): Promise<boolean> {
         requestedPermissions.granted || requestedPermissions.ios?.status === Notifications.IosAuthorizationStatus.PROVISIONAL
     );
 }
+
+*/
 
 // backup notifications
 
@@ -106,9 +144,9 @@ export async function markFacilityNotified(facilityId: string): Promise<void> {
 
 
 export async function notifyNearbyFacility(facility: NotificationFacility): Promise<boolean> {
-    const hasPermission = await requestNotificationPermissions();
+    const hasPermission = await hasNotificationPermission();
 
-    if (!hasPermission) {
+    if (!hasPermission) {``
         return false;
     }
 
