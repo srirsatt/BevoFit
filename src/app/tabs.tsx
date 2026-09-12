@@ -11,14 +11,12 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { Home } from '../screens/Home';
 import { Calendar } from '../screens/Calendar';
 import { Map } from '../screens/Map';
-import { Social } from '../screens/Social';
 import { Settings } from '../screens/Settings';
 
 
 type TabParamList = {
     Home: undefined;
     Calendar: undefined;
-    Social: undefined;
     Settings: undefined;
     Map: undefined;
 };
@@ -87,14 +85,6 @@ export default function ClassicTabs() {
                 component={Map}
                 options={{
                     tabBarIcon: ({ color, size }) => <Ionicons name="map" size={size} color={color} />
-                }}
-            >
-            </Tab.Screen>
-            <Tab.Screen
-                name="Social"
-                component={Social}
-                options={{
-                    tabBarIcon: ({ color, size }) => <Ionicons name="people" size={size} color={color} />
                 }}
             >
             </Tab.Screen>

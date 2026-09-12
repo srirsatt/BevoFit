@@ -80,6 +80,24 @@ type FacilityWithHours = FacilityRow & {
   hero_image_url?: string | null;
 };
 
+const GYM_PREFERENCE: Record<string, number> = {
+  'gregory gymnasium': 0,
+  'gregory gym': 0,
+  'recreational sports center': 1,
+  'bellmont hall': 2,
+};
+
+function compareGymDisplayOrder(a: FacilityWithHours, b: FacilityWithHours): number {
+  const aOpen = isFacilityOpen(a.hours).isOpen;
+  const bOpen = isFacilityOpen(b.hours).isOpen;
+  if (aOpen !== bOpen) return aOpen ? -1 : 1;
+  if (!aOpen) return 0;
+
+  // Prefer these three only while open; stable sorting keeps other gyms in order.
+  return (GYM_PREFERENCE[a.name.trim().toLowerCase()] ?? 3)
+    - (GYM_PREFERENCE[b.name.trim().toLowerCase()] ?? 3);
+}
+
 // Helper function to convert 12-hour time to 24-hour format
 /*
 function convertTo24Hour(hour: number, minute: number, period: string): string {
@@ -521,7 +539,7 @@ export function Home() {
 
         <ScanCard onPress={_handleButtonPressAsync} />
         { }
-        {gyms.sort((a, b) => Number(isFacilityOpen(b.hours).isOpen) - Number(isFacilityOpen(a.hours).isOpen)).map((gym) => (
+        {[...gyms].sort(compareGymDisplayOrder).map((gym) => (
           <Card
             gym={gym}
             key={gym.id}
@@ -693,7 +711,6 @@ const Card = ({ gym, onPress }: { gym: FacilityWithHours; onPress: (gym: Facilit
   const scale = useSharedValue(1);
   const rStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
   const { isOpen, minutesLeft } = isFacilityOpen(gym.hours);
-  const openStyle = isOpen ? "text-[#2FBF71] text-4xl" : "text-[#E5533D] text-4xl"
 
   let timeDisplay = '';
   if (minutesLeft != null) {
@@ -733,7 +750,7 @@ const Card = ({ gym, onPress }: { gym: FacilityWithHours; onPress: (gym: Facilit
         </View>
 
       </View>
-      <Text className={openStyle}>▶</Text>
+      <Ionicons name="chevron-forward" size={28} color={isOpen ? '#2FBF71' : '#E5533D'} accessible={false} />
     </AnimatedPressable>
   );
 }

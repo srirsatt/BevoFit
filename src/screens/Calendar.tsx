@@ -1,4 +1,5 @@
 import { StyleSheet, Text, View, ScrollView, useWindowDimensions, Pressable, useColorScheme, RefreshControl } from 'react-native';
+import type { ViewToken } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { supabase } from '../lib/supabase';
@@ -19,7 +20,7 @@ import { showLocation } from 'react-native-map-link';
 import * as Haptics from "expo-haptics";
 import * as WebBrowser from 'expo-web-browser';
 import { useDemoMode } from '../contexts/DemoModeContext';
-import { BottomSheetModal, BottomSheetScrollView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
+import { BottomSheetModal, BottomSheetFlatList, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
 import { FullWindowOverlay } from 'react-native-screens';
 
 
@@ -405,11 +406,9 @@ function getWeekAtGlanceDays(classes: CalendarClass[]) {
             date,
             isCurrentMonth,
             isCurrentWeek: true,
-            classes: getUniqueClassesByName(
-                classes
-                    .filter((classItem) => normalizeDay(classItem.day) === normalizeDay(day))
-                    .sort((a, b) => a.startMinutes - b.startMinutes)
-            ),
+            classes: classes
+                .filter((classItem) => normalizeDay(classItem.day) === normalizeDay(day))
+                .sort((a, b) => a.startMinutes - b.startMinutes),
         };
     });
 }
@@ -421,6 +420,7 @@ const WeekAtGlanceCard = ({
     days: WeekAtGlanceDay[];
     onSelectDay: (day: WeekAtGlanceDay) => void;
 }) => {
+    const isDarkMode = useColorScheme() === 'dark';
     const today = new Date();
     const monthLabel = today.toLocaleDateString("en-US", {
         month: "long",
@@ -430,7 +430,7 @@ const WeekAtGlanceCard = ({
     const weekEnd = days[days.length - 1]?.date ?? today;
 
     return (
-        <View className="bg-white dark:bg-[#0D0D0F] rounded-2xl border border-[#E5E5E5] dark:border-[#2A2A2D] px-5 pt-5 pb-6 mb-4">
+        <View className="bg-white dark:bg-[#0D0D0F] rounded-2xl border border-[#E5E5E5] dark:border-[#2A2A2D] px-5 pt-5 pb-8 mb-4">
             <View className="flex-row items-start justify-between">
                 <Text className="text-gray-900 dark:text-white text-2xl font-extrabold">
                     {monthLabel}
@@ -440,41 +440,72 @@ const WeekAtGlanceCard = ({
                 </Text>
             </View>
 
-            <Text className="text-gray-500 dark:text-neutral-500 text-sm font-bold mt-2 mb-5">
+            <Text className="text-gray-500 dark:text-neutral-500 text-sm font-bold mt-2 mb-8">
                 {formatWeekRange(weekStart, weekEnd)}
             </Text>
 
-            <View className="flex-row mb-4">
-                {["S", "M", "T", "W", "T", "F", "S"].map((label, index) => (
-                    <Text key={`${label}-${index}`} className="text-gray-500 dark:text-neutral-500 text-xs font-extrabold text-center flex-1">
-                        {label}
-                    </Text>
-                ))}
-            </View>
-
-            <View className="flex-row">
+            <View className="flex-row -mx-3">
                 {days.map((dayItem) => {
+                    const isToday = dayItem.date.toDateString() === today.toDateString();
+                    const classCount = dayItem.classes.length;
                     return (
                         <Pressable
                             key={`${dayItem.day}-${dayItem.date.toDateString()}`}
+                            accessibilityRole="button"
+                            accessibilityLabel={`${isToday ? 'Today, ' : ''}${dayItem.date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}, ${classCount} ${classCount === 1 ? 'class' : 'classes'}`}
+                            accessibilityHint="Opens this day's events"
                             onPress={() => {
                                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                                 onSelectDay(dayItem);
                             }}
-                            style={{ width: `${100 / 7}%`, height: 34 }}
-                            className="items-center justify-center"
+                            className="flex-1 items-center py-1"
                         >
-                            {dayItem.classes.length > 0 ? (
-                                <Text className="text-[#BF5700] text-lg font-bold text-center">
-                                    {dayItem.classes.length}
-                                </Text>
-                            ) : (
-                                <View className="w-2.5 h-2.5 rounded-full bg-[#BF5700]" />
+                            {({ pressed }) => (
+                                <>
+                                    <Text
+                                        className="text-gray-500 dark:text-neutral-500 text-xs font-semibold text-center mb-3"
+                                    >
+                                        {dayItem.day[0]}
+                                    </Text>
+                                    <View className="h-12 w-full items-center justify-center">
+                                        <View
+                                            style={{
+                                                width: 36,
+                                                height: 36,
+                                                borderRadius: 18,
+                                                backgroundColor: isToday
+                                                    ? pressed ? '#D4650A' : BURNT_ORANGE
+                                                    : isDarkMode
+                                                        ? pressed ? 'rgba(255,255,255,0.09)' : 'rgba(255,255,255,0.04)'
+                                                        : pressed ? 'rgba(0,0,0,0.08)' : 'rgba(0,0,0,0.035)',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                            }}
+                                        >
+                                            {classCount > 0 ? (
+                                                <Text
+                                                    className="text-lg font-semibold text-center"
+                                                    style={{ color: isToday || isDarkMode ? '#FFFFFF' : '#404040' }}
+                                                >
+                                                    {classCount}
+                                                </Text>
+                                            ) : (
+                                                <View
+                                                    className="w-1 h-1 rounded-full"
+                                                    style={{ backgroundColor: isToday ? '#FFFFFF' : isDarkMode ? '#737373' : '#A3A3A3' }}
+                                                />
+                                            )}
+                                        </View>
+                                    </View>
+                                </>
                             )}
                         </Pressable>
                     );
                 })}
             </View>
+            <Text className="text-gray-500 dark:text-neutral-500 text-xs text-center mt-4">
+                Tap a day's number to view that day's classes.
+            </Text>
         </View>
     )
 }
@@ -575,21 +606,6 @@ function AnimatedDot({
     );
 }
 
-function getUniqueClassesByName(classes: CalendarClass[]) {
-    const seenNames = new Set<string>();
-
-    return classes.filter((classItem) => {
-        const normalizedName = classItem.name.trim().toLowerCase();
-
-        if (seenNames.has(normalizedName)) {
-            return false;
-        }
-
-        seenNames.add(normalizedName);
-        return true;
-    });
-}
-
 const AnimatedScrollView = Animated.createAnimatedComponent(ScrollView);
 
 
@@ -602,6 +618,7 @@ export function Calendar() {
     const [refreshing, setRefreshing] = useState(false);
     const [facilities, setFacilities] = useState<FacilityMarker[]>([]);
     const [selectedWeekDay, setSelectedWeekDay] = useState<WeekAtGlanceDay | null>(null);
+    const [visibleClassRange, setVisibleClassRange] = useState<{ first: number; last: number } | null>(null);
     const weekSheetRef = useRef<BottomSheetModal>(null);
     const colorScheme = useColorScheme();
     const isDarkMode = colorScheme === "dark";
@@ -611,14 +628,22 @@ export function Calendar() {
     const cardGap = 12;
     const snapInterval = cardWidth + cardGap;
     const { isDemoMode, setIsDemoMode } = useDemoMode();
-    const weekSheetSnapPoints = useMemo(() => ["45%", "70%"], []);
+    const weekSheetSnapPoints = useMemo(() => ["70%"], []);
     const weekAtGlanceDays = useMemo(() => getWeekAtGlanceDays(calendarClasses), [calendarClasses]);
+    const weekViewabilityConfig = useRef({ itemVisiblePercentThreshold: 50 }).current;
+    const onWeekClassesVisible = useCallback(({ viewableItems }: { viewableItems: ViewToken<CalendarClass>[] }) => {
+        const indices = viewableItems.flatMap((item) => item.index === null ? [] : [item.index]);
+        setVisibleClassRange(indices.length > 0
+            ? { first: Math.min(...indices) + 1, last: Math.max(...indices) + 1 }
+            : null);
+    }, []);
 
     const renderWeekSheetBackdrop = useCallback((props: React.ComponentProps<typeof BottomSheetBackdrop>) => (
         <BottomSheetBackdrop {...props} appearsOnIndex={0} disappearsOnIndex={-1} pressBehavior="close" />
     ), []);
 
     const openWeekDaySheet = useCallback((day: WeekAtGlanceDay) => {
+        setVisibleClassRange(null);
         setSelectedWeekDay(day);
         weekSheetRef.current?.present();
     }, []);
@@ -957,38 +982,61 @@ export function Calendar() {
                     handleIndicatorStyle={{ backgroundColor: isDarkMode ? 'white' : '#D4D4D4', width: '10%', height: 5 }}
                     enableDynamicSizing={false}
                 >
-                    <BottomSheetScrollView>
-                        <View className="px-7 pt-3 pb-8">
-                            <Text className="text-gray-900 dark:text-white text-4xl font-extrabold">
-                                {selectedWeekDay?.date.toLocaleDateString("en-US", {
-                                    weekday: "long",
-                                    month: "long",
-                                    day: "numeric",
-                                })}
-                            </Text>
-                            <Text className="text-[#BF5700] text-lg font-extrabold mt-1">
-                                {selectedWeekDay?.classes.length ?? 0} {(selectedWeekDay?.classes.length ?? 0) === 1 ? "class" : "classes"}
-                            </Text>
-
-                            <View className="h-px bg-[#E5E5E5] dark:bg-[#2A2A2D] my-5" />
-
-                            {selectedWeekDay?.classes.map((classItem) => (
-                                <View key={classItem.id} className="flex-row items-start mb-4">
-                                    <Text className="text-gray-500 dark:text-neutral-500 text-base font-extrabold w-24">
-                                        {classItem.startLabel}
-                                    </Text>
-                                    <View className="flex-1">
-                                        <Text className="text-gray-900 dark:text-white text-lg font-extrabold">
-                                            {classItem.name}
-                                        </Text>
-                                        <Text className="text-gray-500 dark:text-neutral-500 text-sm font-semibold mt-1">
-                                            {translateStudioName(classItem.studio)}
-                                        </Text>
-                                    </View>
+                    <View className="px-7 pt-3 pb-5">
+                        <Text className="text-gray-900 dark:text-white text-3xl font-extrabold">
+                            {selectedWeekDay?.day}
+                        </Text>
+                        <Text className="text-gray-500 dark:text-neutral-400 text-base mt-1">
+                            {selectedWeekDay?.date.toLocaleDateString("en-US", { month: "long", day: "numeric" })}
+                        </Text>
+                        <Text className="text-[#BF5700] text-sm font-semibold mt-3">
+                            {selectedWeekDay?.classes.length ?? 0} {(selectedWeekDay?.classes.length ?? 0) === 1 ? "class" : "classes"} scheduled
+                        </Text>
+                    </View>
+                    <View className="h-px mx-7 bg-[#E5E5E5] dark:bg-[#2A2A2D]" />
+                    <BottomSheetFlatList<CalendarClass>
+                        key={selectedWeekDay?.date.toDateString() ?? 'empty'}
+                        data={selectedWeekDay?.classes ?? []}
+                        keyExtractor={(item: CalendarClass) => item.id}
+                        style={{ flex: 1 }}
+                        contentContainerStyle={{ paddingHorizontal: 28, paddingBottom: 12, flexGrow: 1 }}
+                        showsVerticalScrollIndicator
+                        indicatorStyle={isDarkMode ? 'white' : 'black'}
+                        viewabilityConfig={weekViewabilityConfig}
+                        onViewableItemsChanged={onWeekClassesVisible}
+                        ItemSeparatorComponent={() => <View className="h-px bg-[#E5E5E5] dark:bg-[#2A2A2D]" />}
+                        ListEmptyComponent={
+                            <View className="flex-1 items-center justify-center py-8">
+                                <Ionicons name="calendar-outline" size={28} color={isDarkMode ? '#737373' : '#A3A3A3'} />
+                                <Text className="text-gray-900 dark:text-white text-lg font-semibold mt-3">No classes scheduled</Text>
+                                <Text className="text-gray-500 dark:text-neutral-400 text-sm text-center mt-2">Choose another day to see what's on.</Text>
+                            </View>
+                        }
+                        renderItem={({ item }: { item: CalendarClass }) => (
+                            <View className="flex-row items-start py-5">
+                                <View className="w-24 pr-3">
+                                    <Text className="text-gray-900 dark:text-neutral-200 text-sm font-semibold">{item.startLabel}</Text>
+                                    <Text className="text-gray-500 dark:text-neutral-500 text-xs mt-1">{item.endLabel}</Text>
                                 </View>
-                            ))}
+                                <View className="flex-1">
+                                    <Text className="text-gray-900 dark:text-white text-lg font-bold">{item.name}</Text>
+                                    <Text className="text-gray-500 dark:text-neutral-400 text-sm mt-1">{translateStudioName(item.studio)}</Text>
+                                </View>
+                            </View>
+                        )}
+                    />
+                    {(selectedWeekDay?.classes.length ?? 0) > 0 && (
+                        <View
+                            className="border-t border-[#E5E5E5] dark:border-[#2A2A2D] px-7 pt-3"
+                            style={{ paddingBottom: Math.max(insets.bottom, 12) }}
+                        >
+                            <Text className="text-gray-500 dark:text-neutral-400 text-xs text-center">
+                                {visibleClassRange
+                                    ? `${visibleClassRange.first === visibleClassRange.last ? visibleClassRange.first : `${visibleClassRange.first}–${visibleClassRange.last}`} of ${selectedWeekDay?.classes.length} ${selectedWeekDay?.classes.length === 1 ? 'class' : 'classes'}`
+                                    : `${selectedWeekDay?.classes.length} ${selectedWeekDay?.classes.length === 1 ? 'class' : 'classes'}`}
+                            </Text>
                         </View>
-                    </BottomSheetScrollView>
+                    )}
                 </BottomSheetModal>
             </FullWindowOverlay>
         </View>
