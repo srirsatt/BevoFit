@@ -7,7 +7,8 @@ import {
   hasNotificationPermission,
   requestNotificationPermissions,
 } from './facilityNotifications';
-import { loadProximityFacilities, handleFacilityEntry } from './nearbyFacilityProximity';
+import { loadProximityFacilities } from './nearbyFacilityProximity';
+import { handleOverlappingFacilityEntry } from './facilityOverlap';
 
 const TASK_NAME = 'nearby-facility-geofencing';
 const PREFERENCE_KEY = 'nearby_facility_alerts_preference';
@@ -199,7 +200,7 @@ if (Platform.OS === 'ios' && !TaskManager.isTaskDefined(TASK_NAME)) {
       await runExclusive(async () => {
         if ((await readPreference()) !== 'enabled') return;
         if (await getPermissionIssue(false)) return;
-        const sent = await handleFacilityEntry(facilityId);
+        const sent = await handleOverlappingFacilityEntry(facilityId);
         if (__DEV__) console.log('Gym entry:', facilityId, 'Notification sent:', sent);
       });
     } catch (error) {

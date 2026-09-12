@@ -1,7 +1,8 @@
 // tabs for classic tabs -> versions older than ios 26
 
-import React from 'react';
-import { createBottomTabNavigator, BottomTabBarButtonProps } from '@react-navigation/bottom-tabs';
+import React, { useEffect } from 'react';
+import { createBottomTabNavigator, BottomTabBar, BottomTabBarButtonProps, BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import { useGymNotification } from '../contexts/GymNotificationContext';
 import { Pressable, useColorScheme, GestureResponderEvent } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -32,12 +33,21 @@ function HapticTabButton({ onPress, ref: _ref, ...rest }: BottomTabBarButtonProp
     return <Pressable onPress={handlePress} {...rest} />;
 }
 
+function NotificationAwareTabBar(props: BottomTabBarProps) {
+    const { pendingGym } = useGymNotification();
+    useEffect(() => {
+        if (pendingGym) props.navigation.navigate('Home');
+    }, [pendingGym, props.navigation]);
+    return <BottomTabBar {...props} />;
+}
+
 export default function ClassicTabs() {
     const colorScheme = useColorScheme();
     const isDarkMode = colorScheme === 'dark';
 
     return (
         <Tab.Navigator
+            tabBar={(props) => <NotificationAwareTabBar {...props} />}
             screenOptions={{
                 headerShown: false,
                 animation: 'fade',

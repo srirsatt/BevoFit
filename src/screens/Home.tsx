@@ -11,7 +11,8 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import '../../global.css';
 import * as WebBrowser from 'expo-web-browser';
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { useNavigation } from '@react-navigation/native';
+import { useIsFocused } from '@react-navigation/native';
+import { useGymNotification } from '../contexts/GymNotificationContext';
 import { supabase } from '../lib/supabase';
 import * as Haptics from 'expo-haptics';
 import { BottomSheetModal, BottomSheetScrollView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
@@ -242,6 +243,9 @@ export function Home() {
 
   const sheetRef = useRef<BottomSheetModal>(null);
   const isPresentingRef = useRef(false);
+  const modalRequestRef = useRef(0);
+  const isFocused = useIsFocused();
+  const { pendingGym, consumeGymNotification } = useGymNotification();
   const snapPoints = useMemo(() => ['90%'], []);
 
   const [deviceId, setDeviceId] = useState<string | null>(null);
@@ -253,27 +257,45 @@ export function Home() {
   const isDarkMode = colorScheme === 'dark';
 
 
-  const handleModalPress = useCallback(async (gym: FacilityWithHours) => {
-    if (isPresentingRef.current) return;
-
+  const handleModalPress = useCallback(async (gym: FacilityWithHours, replaceCurrent = false) => {
+    if (!sheetRef.current || (isPresentingRef.current && !replaceCurrent)) return;
+    const wasPresenting = isPresentingRef.current;
+    const requestId = ++modalRequestRef.current;
     isPresentingRef.current = true;
     setSelectedGymId(gym.id);
     setSelectedBusyness(null);
+    setCommunityBusyness(null);
 
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    sheetRef.current?.present();
+    if (!wasPresenting) sheetRef.current.present();
 
-    // Load saved report AFTER modal is shown
-    const saved = await getSavedReport(gym.id);
-    if (saved !== null) setSelectedBusyness(saved);
-
-    // Fetch community busyness from Supabase
-    const community = await getFacilityBusyness(gym.id);
-    setCommunityBusyness(community);
+    try {
+      const [saved, community] = await Promise.all([
+        getSavedReport(gym.id), getFacilityBusyness(gym.id),
+      ]);
+      // An older gym's request must not overwrite a newly opened gym's data.
+      if (modalRequestRef.current !== requestId) return;
+      setSelectedBusyness(saved);
+      setCommunityBusyness(community);
+    } catch (error) {
+      console.error('Could not load gym crowd information:', error);
+    }
   }, []);
+
+  useEffect(() => {
+    if (!pendingGym || !isFocused || gymsLoading || gymsError || !sheetRef.current) return;
+    const gym = gyms.find((item) => item.id === pendingGym.facilityId);
+    if (gym) {
+      void handleModalPress(gym, true);
+    } else {
+      Alert.alert('Gym unavailable', 'This gym is no longer available. Browse the gyms on Home instead.');
+    }
+    consumeGymNotification(pendingGym.notificationId);
+  }, [pendingGym, isFocused, gymsLoading, gymsError, gyms, handleModalPress, consumeGymNotification]);
 
   const onDismiss = useCallback(() => {
     isPresentingRef.current = false;
+    modalRequestRef.current++;
   }, []);
 
   const handleSheetChanges = useCallback((index: number) => {
@@ -433,7 +455,7 @@ export function Home() {
   return (
     <View style={[styles.container, { paddingTop: insets.top }]} className="bg-gray-50 dark:bg-black">
       <View className="w-full px-5 mt-4">
-        <Text className="text-black dark:text-white text-3xl">welcome to</Text>
+        <Text className="text-black dark:text-white text-2xl">welcome to</Text>
         <Pressable
           onPress={() => {
             console.log("Clicked");

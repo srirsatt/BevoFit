@@ -85,7 +85,9 @@ function setup(overrides = {}) {
         if (state.fetchError) throw new Error('offline');
         return state.facilities;
       },
-      handleFacilityEntry: async (id) => { state.calls.push(`notify:${id}`); return true; },
+    },
+    './facilityOverlap': {
+      handleOverlappingFacilityEntry: async (id) => { state.calls.push(`notify:${id}`); return true; },
     },
   };
   const exports = {};

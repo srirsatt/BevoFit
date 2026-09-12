@@ -18,6 +18,7 @@ import { House, Map, Trophy } from 'lucide-react-native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import '../lib/facilityGeofencing';
 import { NearbyAlertsProvider } from '../contexts/NearbyAlertsContext';
+import { GymNotificationProvider } from '../contexts/GymNotificationContext';
 
 
 Asset.loadAsync([
@@ -90,6 +91,7 @@ export default function TabLayout() {
       <GestureHandlerRootView style={{ flex: 1 }}>
         <BottomSheetModalProvider>
           <NearbyAlertsProvider>
+            <GymNotificationProvider useClassic={useClassic}>
             <ModelPreloader />
 
             {useClassic ? (
@@ -123,6 +125,7 @@ export default function TabLayout() {
                 </NativeTabs>
               </>
             )}
+            </GymNotificationProvider>
           </NearbyAlertsProvider>
         </BottomSheetModalProvider>
       </GestureHandlerRootView>
