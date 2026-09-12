@@ -14,6 +14,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { showLocation } from 'react-native-map-link';
 import { useRouter } from 'expo-router';
+import { usableWalkingOrigin, walkingMinutes, type WalkingOrigin } from '../lib/walkingTime';
 
 /*
 desired facilities:
@@ -48,6 +49,36 @@ export function Map() {
     // variables for bottomsheetmodal
     const [selectedFacilityId, setSelectedFacilityId] = useState<string | null>(null);
     const selectedFacility = useMemo(() => pins.find(p => p.id === selectedFacilityId), [pins, selectedFacilityId]);
+    const latestOriginRef = useRef<WalkingOrigin | null>(null);
+    const [walkMinutes, setWalkMinutes] = useState<number | null>(null);
+
+    useEffect(() => {
+        setWalkMinutes(null);
+        if (!selectedFacility) return;
+        let cancelled = false;
+        let pending = false;
+        let lastRequestAt = 0;
+
+        const updateWalkingTime = async () => {
+            const origin = latestOriginRef.current;
+            if (!origin || !usableWalkingOrigin(origin)) {
+                setWalkMinutes(null);
+                return;
+            }
+            if (pending || Date.now() - lastRequestAt < 60000) return;
+            pending = true;
+            lastRequestAt = Date.now();
+            const minutes = await walkingMinutes(origin, selectedFacility);
+            if (!cancelled) {
+                setWalkMinutes(latestOriginRef.current && usableWalkingOrigin(latestOriginRef.current) ? minutes : null);
+            }
+            pending = false;
+        };
+
+        void updateWalkingTime();
+        const timer = setInterval(() => { void updateWalkingTime(); }, 5000);
+        return () => { cancelled = true; clearInterval(timer); };
+    }, [selectedFacility]);
 
     const sheetRef = useRef<BottomSheetModal>(null);
     const isPresentingRef = useRef(false);
@@ -143,6 +174,9 @@ export function Map() {
                     longitudeDelta: 0.006013015735092608,
                 }}
                 showsUserLocation={true}
+                onUserLocationChange={({ nativeEvent }) => {
+                    latestOriginRef.current = nativeEvent.coordinate ?? null;
+                }}
                 showsMyLocationButton={false}
                 onRegionChangeComplete={(region) => {
                     console.log("Centering", region.latitude, region.longitude);
@@ -192,9 +226,16 @@ export function Map() {
                     <BottomSheetView>
                         <View className="px-6">
                             <Text className="text-gray-900 dark:text-white text-3xl mt-1 font-bold">{selectedFacility?.name}</Text>
-                            <View className="flex-row items-center mt-2">
+                            <View className="flex-row flex-wrap items-center mt-2 gap-y-1">
                                 <Ionicons name="location-sharp" size={14} color="#9CAEAF" />
-                                <Text className="text-gray-500 dark:text-gray-400 text-sm"> {selectedFacility?.addr}</Text>
+                                <Text className="text-gray-500 dark:text-gray-400 text-sm" style={{ flexShrink: 1 }}> {selectedFacility?.addr}</Text>
+                                {walkMinutes !== null && (
+                                    <View className="flex-row items-center" accessible accessibilityLabel={`${walkMinutes} minute walk`}>
+                                        <View className="w-1 h-1 rounded-full bg-gray-500 dark:bg-gray-400 mx-2" />
+                                        <Text className="text-gray-500 dark:text-gray-400 text-sm mr-1">{walkMinutes} min</Text>
+                                        <Ionicons name="walk-outline" size={14} color={isDarkMode ? '#9CA3AF' : '#6B7280'} />
+                                    </View>
+                                )}
                             </View>
                             <View className="h-[1px] w-full bg-[#E5E5E5] dark:bg-[#262626] mt-5"></View>
                             <Text className="text-gray-900 dark:text-white text-xl mt-3">{selectedFacility?.general_info}</Text>

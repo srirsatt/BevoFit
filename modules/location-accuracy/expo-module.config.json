@@ -1,6 +1,6 @@
 {
   "platforms": ["apple"],
   "apple": {
-    "modules": ["BevoLocationAccuracyModule"]
+    "modules": ["BevoLocationAccuracyModule", "BevoWalkingDirectionsModule"]
   }
 }
