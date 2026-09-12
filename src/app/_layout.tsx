@@ -13,6 +13,7 @@ import ClassicTabs from './tabs';
 import '../lib/facilityGeofencing';
 import { NearbyAlertsProvider } from '../contexts/NearbyAlertsContext';
 import { GymNotificationProvider } from '../contexts/GymNotificationContext';
+import { AppearanceProvider, useAppearanceSettings } from '../contexts/AppearanceContext';
 
 Asset.loadAsync([
   ...NavigationAssets,
@@ -22,16 +23,17 @@ SplashScreen.preventAutoHideAsync();
 
 function ModelPreloader() {
   const { status } = useTensorflowModel();
+  const { ready: appearanceReady } = useAppearanceSettings();
   // Kick off single-load at app startup
   useEffect(() => {
     loadTensorflowModelOnce();
   }, []);
 
   useEffect(() => {
-    if (status === 'success') {
+    if (status === 'success' && appearanceReady) {
       SplashScreen.hideAsync();
     }
-  }, [status]);
+  }, [status, appearanceReady]);
 
   return null;
 }
@@ -55,36 +57,38 @@ export default function TabLayout() {
   const useClassic = Platform.OS !== 'ios' || ver === null || ver < 26;
 
   return (
-    <DemoModeProvider>
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <BottomSheetModalProvider>
-          <NearbyAlertsProvider>
-            <GymNotificationProvider useClassic={useClassic}>
-              <ModelPreloader />
-              {useClassic ? <ClassicTabs /> : (
-                <NativeTabs tintColor="#BF5700" labelStyle={{ fontSize: 10 }}>
-                  <NativeTabs.Trigger name="index">
-                    <Label>Home</Label>
-                    <Icon src={require('../assets/icons/home-rounded.png')} />
-                  </NativeTabs.Trigger>
-                  <NativeTabs.Trigger name="calendar">
-                    <Label>Calendar</Label>
-                    <Icon sf="calendar" />
-                  </NativeTabs.Trigger>
-                  <NativeTabs.Trigger name="map">
-                    <Label>Map</Label>
-                    <Icon sf="map.fill" />
-                  </NativeTabs.Trigger>
-                  <NativeTabs.Trigger name="settings">
-                    <Label>Settings</Label>
-                    <Icon sf="gear" />
-                  </NativeTabs.Trigger>
-                </NativeTabs>
-              )}
-            </GymNotificationProvider>
-          </NearbyAlertsProvider>
-        </BottomSheetModalProvider>
-      </GestureHandlerRootView>
-    </DemoModeProvider>
+    <AppearanceProvider>
+      <DemoModeProvider>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <BottomSheetModalProvider>
+            <NearbyAlertsProvider>
+              <GymNotificationProvider useClassic={useClassic}>
+                <ModelPreloader />
+                {useClassic ? <ClassicTabs /> : (
+                  <NativeTabs tintColor="#BF5700" labelStyle={{ fontSize: 10 }}>
+                    <NativeTabs.Trigger name="index">
+                      <Label>Home</Label>
+                      <Icon src={require('../assets/icons/home-rounded.png')} />
+                    </NativeTabs.Trigger>
+                    <NativeTabs.Trigger name="calendar">
+                      <Label>Calendar</Label>
+                      <Icon sf="calendar" />
+                    </NativeTabs.Trigger>
+                    <NativeTabs.Trigger name="map">
+                      <Label>Map</Label>
+                      <Icon sf="map.fill" />
+                    </NativeTabs.Trigger>
+                    <NativeTabs.Trigger name="settings">
+                      <Label>Settings</Label>
+                      <Icon sf="gear" />
+                    </NativeTabs.Trigger>
+                  </NativeTabs>
+                )}
+              </GymNotificationProvider>
+            </NearbyAlertsProvider>
+          </BottomSheetModalProvider>
+        </GestureHandlerRootView>
+      </DemoModeProvider>
+    </AppearanceProvider>
   )
 }

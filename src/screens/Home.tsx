@@ -22,15 +22,7 @@ import { formatInTimeZone } from 'date-fns-tz';
 import { useDemoMode } from '../contexts/DemoModeContext';
 import { isFacilityOpen, parseIntervals, type FacilityHours } from '../lib/facilityHours';
 import * as Application from 'expo-application';
-
-export async function getFacilitiesMinimal() {
-  const { data, error } = await supabase
-    .from('facilities')
-    .select('id, name, slug, lat, lng, addr, facility_url, hero_image_path, general_info, facility_activities ( activity ), facility_features ( feature ), facility_hours ( * )')
-
-  if (error) throw error;
-  return data;
-}
+import { useFacilities } from '../hooks/useFacilities';
 
 export async function getFacilityActivities() {
   const { data, error } = await supabase
@@ -65,8 +57,8 @@ type FacilityRow = {
   id: string;
   name: string;
   slug: string;
-  lat: number;
-  lng: number;
+  lat: number | null;
+  lng: number | null;
   addr: string;
   facility_url: string;
   hero_image_path: string;
@@ -245,9 +237,32 @@ async function getFacilityBusyness(facilityId: string): Promise<number | null> {
 
 
 export function Home() {
-  const [gyms, setGyms] = useState<FacilityWithHours[]>([]);
-  const [gymsLoading, setGymsLoading] = useState(true);
-  const [gymsError, setGymsError] = useState<string | null>(null);
+  const facilities = useFacilities();
+  const gymsLoading = facilities.loading;
+  const gymsError = facilities.data === null ? facilities.error : null;
+  const gyms = useMemo<FacilityWithHours[]>(() => (facilities.data ?? []).map((facility) => ({
+    id: facility.id,
+    name: facility.name,
+    slug: facility.slug ?? '',
+    lat: facility.lat ?? null,
+    lng: facility.lng ?? null,
+    addr: facility.addr ?? '',
+    facility_url: facility.facility_url ?? '',
+    hero_image_path: facility.hero_image_path ?? '',
+    general_info: facility.general_info ?? '',
+    facility_activities: facility.facility_activities?.map((item) => item.activity) ?? [],
+    facility_features: facility.facility_features?.map((item) => item.feature) ?? [],
+    hours: facility.facility_hours ?? null,
+    hero_image_url: facility.hero_image_path
+      ? supabase.storage.from('facility-imgs').getPublicUrl(facility.hero_image_path).data.publicUrl
+      : null,
+  })), [facilities.data]);
+
+  useEffect(() => {
+    gyms.forEach((gym) => {
+      if (gym.hero_image_url) void Image.prefetch(gym.hero_image_url).catch(() => {});
+    });
+  }, [gyms]);
   const [refreshing, setRefreshing] = useState(false);
   const [tapCount, setTapCount] = useState(0); // for demo mode
   const { isDemoMode, setIsDemoMode } = useDemoMode();
@@ -303,13 +318,15 @@ export function Home() {
   useEffect(() => {
     if (!pendingGym || !isFocused || gymsLoading || gymsError || !sheetRef.current) return;
     const gym = gyms.find((item) => item.id === pendingGym.facilityId);
+    // A saved catalog may predate the gym referenced by a notification.
+    if (!gym && (facilities.refreshing || facilities.error)) return;
     if (gym) {
       void handleModalPress(gym, true);
     } else {
       Alert.alert('Gym unavailable', 'This gym is no longer available. Browse the gyms on Home instead.');
     }
     consumeGymNotification(pendingGym.notificationId);
-  }, [pendingGym, isFocused, gymsLoading, gymsError, gyms, handleModalPress, consumeGymNotification]);
+  }, [pendingGym, isFocused, gymsLoading, gymsError, gyms, facilities.refreshing, facilities.error, handleModalPress, consumeGymNotification]);
 
   const onDismiss = useCallback(() => {
     isPresentingRef.current = false;
@@ -323,64 +340,24 @@ export function Home() {
     }
   }, []);
 
-  const onRefresh = useCallback(() => {
+  const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    let isMounted = true;
-    loadGyms(isMounted);
-    setTimeout(() => {
-      setRefreshing(false);
-    }, 250);
-    return () => { isMounted = false; };
-  }, []);
-
-  async function loadGyms(isMounted: boolean) {
     try {
-      setGymsLoading(true);
-      setGymsError(null);
-
-      // 1. Fetch facilities basic info (FAST)
-      const facilities = await getFacilitiesMinimal();
-      //console.log("first facility hours field:", facilities?.[0]?.facility_hours);
-
-      // 2. Generate URLs and start prefetching immediately
-      const initialGyms = facilities.map((f) => {
-
-        const hero_image_url = f.hero_image_path
-          ? supabase.storage.from('facility-imgs').getPublicUrl(f.hero_image_path).data.publicUrl
-          : null;
-
-        if (hero_image_url) {
-          Image.prefetch(hero_image_url).catch(() => { });
-        }
-        return { ...f, hero_image_url, hours: f.facility_hours || null, facility_activities: f.facility_activities?.map((a: any) => a.activity) || [], facility_features: f.facility_features?.map((fea: any) => fea.feature) || [] } as unknown as FacilityWithHours;
-      });
-
-      if (isMounted) {
-        setGyms(initialGyms);
-        setGymsLoading(false);
-      }
-
-      // 3. Update with hours in background
-    } catch (e: any) {
-      console.error('Error in loadGyms:', e);
-      if (isMounted) {
-        setGymsError(e.message);
-        setGymsLoading(false);
-      }
+      await facilities.refresh(true);
+    } finally {
+      setRefreshing(false);
     }
-  }
+  }, [facilities.refresh]);
 
   useEffect(() => {
-    let isMounted = true;
-    async function init() {
-      const deviceId = await Application.getIosIdForVendorAsync();
-      if (isMounted) {
-        setDeviceId(deviceId);
-        loadGyms(isMounted);
-      }
+    let active = true;
+    // Gym loading no longer waits for device identification.
+    if (Application.getIosIdForVendorAsync) {
+      void Application.getIosIdForVendorAsync()
+        .then((id) => { if (active) setDeviceId(id); })
+        .catch((error) => console.error('Could not load device identifier:', error));
     }
-    init();
-    return () => { isMounted = false; };
+    return () => { active = false; };
   }, []);
 
   /*
@@ -537,6 +514,11 @@ export function Home() {
           <Text className="text-gray-500 dark:text-neutral-500 text-xs uppercase mt-2 mb-2">Gyms</Text>
         )}
 
+        {facilities.error && (
+          <Text className="text-gray-500 dark:text-neutral-400 text-sm mb-3">
+            {facilities.data !== null ? 'Couldn’t refresh. Showing saved gym info.' : 'Couldn’t load gyms. Pull down to try again.'}
+          </Text>
+        )}
         <ScanCard onPress={_handleButtonPressAsync} />
         { }
         {[...gyms].sort(compareGymDisplayOrder).map((gym) => (

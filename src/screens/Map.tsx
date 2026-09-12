@@ -2,7 +2,8 @@ import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react'
 import MapView, { Marker, Callout } from 'react-native-maps';
 import { FullWindowOverlay } from 'react-native-screens';
 import { StyleSheet, View, Text, Pressable, useColorScheme } from 'react-native';
-import { supabase } from '../lib/supabase';
+import { useFacilities } from '../hooks/useFacilities';
+import type { FacilityMarker } from '../lib/facilities';
 import { BottomSheetModal, BottomSheetView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
 import * as Haptics from 'expo-haptics';
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -29,20 +30,8 @@ Whitaker Sports Complex
 
 */
 
-type FacilityMarker = {
-    id: string,
-    name: string,
-    lat: number,
-    lng: number,
-    general_info: string,
-    addr: string,
-};
-
-
 export function Map() {
-    const [pins, setPins] = useState<FacilityMarker[]>([]);
-    // empty arr to start
-    const [loading, setLoading] = useState(true);
+    const { markers: pins } = useFacilities();
     const colorScheme = useColorScheme();
     const isDarkMode = colorScheme === 'dark';
 
@@ -131,37 +120,6 @@ export function Map() {
             appsWhiteList: ['apple-maps']
         });
     }
-
-    // enter pins from supabase to pins array on load, then map them on succesful load
-    useEffect(() => {
-        let isMounted = true;
-        async function loadPins() {
-            setLoading(true);
-
-            const { data, error } = await supabase
-                .from("facilities")
-                .select("id, name, lat, lng, general_info, addr")
-                .not("lat", "is", null)
-                .not("lng", "is", null);
-
-            if (error) {
-                console.error("Error loading facilities from supabase", error);
-                if (isMounted) setPins([]); // sets as blank on error
-            } else {
-                if (isMounted) setPins((data ?? []) as FacilityMarker[]);
-            }
-
-            if (isMounted) {
-                setLoading(false); // finish loading sequence
-            }
-        }
-
-        loadPins();
-
-        return () => {
-            isMounted = false;
-        };
-    }, []);
 
     return (
         <View style={styles.container}>

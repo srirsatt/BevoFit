@@ -34,6 +34,7 @@ function setup(overrides = {}) {
     Haptics: { impactAsync() {}, ImpactFeedbackStyle: { Medium: 'medium' } },
     console: { error: error => state.errors.push(error) },
     isFocused: true, gymsLoading: false, gymsError: null, gyms: [{ id: 'greg' }, { id: 'rec' }],
+    facilities: { refreshing: false, error: null },
     pendingGym: { notificationId: 'tap', facilityId: 'greg' },
     consumeGymNotification: id => state.consumed.push(id),
     Alert: { alert: (...args) => state.alerts.push(args) }, ...overrides,
@@ -52,6 +53,21 @@ test('tap waits for Home focus, gym loading, and recovery from fetch errors', ()
   env.gymsError = null; checkPending();
   assert.equal(state.selected, 'greg');
   assert.equal(state.presents, 1);
+  assert.deepEqual(state.consumed, ['tap']);
+});
+
+test('a notification for a gym missing from saved data waits for a successful refresh', () => {
+  const { state, env, checkPending } = setup({ gyms: [], facilities: { refreshing: true, error: null } });
+  checkPending();
+  assert.equal(state.consumed.length, 0);
+  assert.equal(state.alerts.length, 0);
+  env.facilities = { refreshing: false, error: 'offline' };
+  checkPending();
+  assert.equal(state.consumed.length, 0);
+  env.facilities = { refreshing: false, error: null };
+  env.gyms = [{ id: 'greg' }];
+  checkPending();
+  assert.equal(state.selected, 'greg');
   assert.deepEqual(state.consumed, ['tap']);
 });
 

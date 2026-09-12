@@ -3,6 +3,7 @@ import type { ViewToken } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { supabase } from '../lib/supabase';
+import { useFacilities } from '../hooks/useFacilities';
 import Ionicons from "@expo/vector-icons/Ionicons";
 import Animated, {
     useSharedValue,
@@ -616,7 +617,7 @@ export function Calendar() {
     const scrollX = useSharedValue(0);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
-    const [facilities, setFacilities] = useState<FacilityMarker[]>([]);
+    const { markers: facilities, refresh: refreshFacilities } = useFacilities();
     const [selectedWeekDay, setSelectedWeekDay] = useState<WeekAtGlanceDay | null>(null);
     const [visibleClassRange, setVisibleClassRange] = useState<{ first: number; last: number } | null>(null);
     const weekSheetRef = useRef<BottomSheetModal>(null);
@@ -728,38 +729,21 @@ export function Calendar() {
         }
     }, []);
 
-    const loadFacilities = useCallback(async () => {
-        const { data, error } = await supabase
-            .from("facilities")
-            .select("id, name, lat, lng, general_info, addr")
-            .not("lat", "is", null)
-            .not("lng", "is", null);
-
-        if (error) {
-            console.error("cal err loading faciliites", error);
-            setFacilities([]);
-            return;
-        }
-
-        setFacilities((data ?? []) as FacilityMarker[]);
-    }, []);
-
     const onRefresh = useCallback(async () => {
         setRefreshing(true);
         try {
             await Promise.all([
                 loadClasses(),
-                loadFacilities(),
+                refreshFacilities(true),
             ]);
         } finally {
             setRefreshing(false);
         }
-    }, [loadClasses, loadFacilities]);
+    }, [loadClasses, refreshFacilities]);
 
     useEffect(() => {
         loadClasses({ showLoading: true });
-        loadFacilities();
-    }, [loadClasses, loadFacilities]);
+    }, [loadClasses]);
 
     const scrollHandler = useAnimatedScrollHandler({
         onScroll: (event) => {
