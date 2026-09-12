@@ -16,6 +16,8 @@ import { DemoModeProvider } from '../contexts/DemoModeContext';
 import ClassicTabs from './tabs';
 import { House, Map, Trophy } from 'lucide-react-native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import '../lib/facilityGeofencing';
+import { NearbyAlertsProvider } from '../contexts/NearbyAlertsContext';
 
 
 Asset.loadAsync([
@@ -87,39 +89,41 @@ export default function TabLayout() {
     <DemoModeProvider>
       <GestureHandlerRootView style={{ flex: 1 }}>
         <BottomSheetModalProvider>
-          <ModelPreloader />
+          <NearbyAlertsProvider>
+            <ModelPreloader />
 
-          {useClassic ? (
-            <ClassicTabs />
-          ) : (
-            <>
-              <NativeTabHaptics />
-              <NativeTabs
-                tintColor='#BF5700'
-              >
-                <NativeTabs.Trigger name="index">
-                  <Label hidden>Home</Label>
-                  <Icon sf="house.fill" drawable="custom_android_drawable" />
-                </NativeTabs.Trigger>
-                <NativeTabs.Trigger name="calendar">
-                  <Label hidden>Calendar</Label>
-                  <Icon sf="calendar" drawable="custom_android_drawable" />
-                </NativeTabs.Trigger>
-                <NativeTabs.Trigger name="social">
-                  <Label hidden>Social</Label>
-                  <Icon sf="person.3.fill" drawable="custom_android_drawable" />
-                </NativeTabs.Trigger>
-                <NativeTabs.Trigger name="map">
-                  <Label hidden>Map</Label>
-                  <Icon sf="map.fill" drawable="custom_android_drawable" />
-                </NativeTabs.Trigger>
-                <NativeTabs.Trigger name="settings">
-                  <Label hidden>Settings</Label>
-                  <Icon sf="gear" drawable="custom_android_drawable" />
-                </NativeTabs.Trigger>
-              </NativeTabs>
-            </>
-          )}
+            {useClassic ? (
+              <ClassicTabs />
+            ) : (
+              <>
+                <NativeTabHaptics />
+                <NativeTabs
+                  tintColor='#BF5700'
+                >
+                  <NativeTabs.Trigger name="index">
+                    <Label hidden>Home</Label>
+                    <Icon sf="house.fill" drawable="custom_android_drawable" />
+                  </NativeTabs.Trigger>
+                  <NativeTabs.Trigger name="calendar">
+                    <Label hidden>Calendar</Label>
+                    <Icon sf="calendar" drawable="custom_android_drawable" />
+                  </NativeTabs.Trigger>
+                  <NativeTabs.Trigger name="social">
+                    <Label hidden>Social</Label>
+                    <Icon sf="person.3.fill" drawable="custom_android_drawable" />
+                  </NativeTabs.Trigger>
+                  <NativeTabs.Trigger name="map">
+                    <Label hidden>Map</Label>
+                    <Icon sf="map.fill" drawable="custom_android_drawable" />
+                  </NativeTabs.Trigger>
+                  <NativeTabs.Trigger name="settings">
+                    <Label hidden>Settings</Label>
+                    <Icon sf="gear" drawable="custom_android_drawable" />
+                  </NativeTabs.Trigger>
+                </NativeTabs>
+              </>
+            )}
+          </NearbyAlertsProvider>
         </BottomSheetModalProvider>
       </GestureHandlerRootView>
     </DemoModeProvider>

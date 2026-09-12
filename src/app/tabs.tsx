@@ -11,12 +11,14 @@ import { Home } from '../screens/Home';
 import { Calendar } from '../screens/Calendar';
 import { Map } from '../screens/Map';
 import { Social } from '../screens/Social';
+import { Settings } from '../screens/Settings';
 
 
 type TabParamList = {
     Home: undefined;
     Calendar: undefined;
     Social: undefined;
+    Settings: undefined;
     Map: undefined;
 };
 
@@ -86,6 +88,13 @@ export default function ClassicTabs() {
                 }}
             >
             </Tab.Screen>
+            <Tab.Screen
+                name="Settings"
+                component={Settings}
+                options={{
+                    tabBarIcon: ({ color, size }) => <Ionicons name="settings" size={size} color={color} />,
+                }}
+            />
         </Tab.Navigator>
     )
 }

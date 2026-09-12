@@ -146,7 +146,7 @@ export async function markFacilityNotified(facilityId: string): Promise<void> {
 export async function notifyNearbyFacility(facility: NotificationFacility): Promise<boolean> {
     const hasPermission = await hasNotificationPermission();
 
-    if (!hasPermission) {``
+    if (!hasPermission) {
         return false;
     }
 

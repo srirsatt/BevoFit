@@ -10,8 +10,8 @@ web-build/
 expo-env.d.ts
 
 # Native build folders
-ios/
-android/
+/ios/
+/android/
 
 # Native
 *.orig.*
