@@ -2,7 +2,7 @@
   "expo": {
     "name": "BevoFit",
     "slug": "gymScanner",
-    "version": "1.1.0",
+    "version": "2.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -18,8 +18,7 @@
         "LSApplicationQueriesSchemes": [
           "maps",
           "comgooglemaps"
-        ],
-        "MinimumOSVersion": "17.0"
+        ]
       },
       "splash": {
         "image": "./assets/splash-light.png",
@@ -30,6 +29,27 @@
           "resizeMode": "cover",
           "backgroundColor": "#000000"
         }
+      },
+      "privacyManifests": {
+        "NSPrivacyTracking": false,
+        "NSPrivacyCollectedDataTypes": [
+          {
+            "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypeDeviceID",
+            "NSPrivacyCollectedDataTypeLinked": true,
+            "NSPrivacyCollectedDataTypeTracking": false,
+            "NSPrivacyCollectedDataTypePurposes": [
+              "NSPrivacyCollectedDataTypePurposeAppFunctionality"
+            ]
+          },
+          {
+            "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypeOtherUserContent",
+            "NSPrivacyCollectedDataTypeLinked": true,
+            "NSPrivacyCollectedDataTypeTracking": false,
+            "NSPrivacyCollectedDataTypePurposes": [
+              "NSPrivacyCollectedDataTypePurposeAppFunctionality"
+            ]
+          }
+        ]
       }
     },
     "android": {
@@ -44,11 +64,18 @@
       "bundler": "metro"
     },
     "plugins": [
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "deploymentTarget": "17.0"
+          }
+        }
+      ],
       "expo-asset",
       "react-native-map-link",
       "expo-web-browser",
       "expo-router",
-      "react-native-vision-camera",
       "expo-maps",
       [
         "expo-location",
@@ -58,15 +85,14 @@
           "isIosBackgroundLocationEnabled": true
         }
       ],
-      "expo-notifications"
+      "expo-notifications",
+      "expo-font"
     ],
     "extra": {
       "eas": {
         "projectId": "9792995b-e864-4303-85f3-62d679471dcb"
       }
     },
-    "owner": "nathos",
-    "privacy": "public",
-    "privacyPolicy": "https://srirsatt.github.io/BevoFit/privacy-policy.html"
+    "owner": "nathos"
   }
 }

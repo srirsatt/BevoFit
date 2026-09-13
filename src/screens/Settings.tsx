@@ -16,7 +16,10 @@ const APPEARANCE_OPTIONS: { value: AppearancePreference; label: string; icon: 's
 ];
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
-const APP_VERSION = Application.nativeApplicationVersion ?? Constants.expoConfig?.version ?? 'Unknown';
+// Show config changes during development; installed releases use their native version.
+const APP_VERSION = (__DEV__ ? Constants.expoConfig?.version : Application.nativeApplicationVersion)
+  ?? Constants.expoConfig?.version ?? 'Unknown';
+const PRIVACY_POLICY_URL = 'https://srirsatt.github.io/BevoFit/privacy-policy.html';
 const SUPPORT_EMAIL_URL = `mailto:info@utrecsports.org?subject=${encodeURIComponent('Check out BevoFit!')}&body=${encodeURIComponent(
   "Hi UT RecSports,\n\nBevoFit has been super helpful for me for finding gym hours and RecSports classes at UT. I'd love for your team to check it out!\n\nhttps://apps.apple.com/us/app/bevofit/id6758592301\n\nThanks!"
 )}`;
@@ -27,6 +30,14 @@ async function openSupportEmail() {
     await Linking.openURL(SUPPORT_EMAIL_URL);
   } catch {
     Alert.alert('Couldn’t open email', 'Set up an email app on your phone, then try again. You can also email info@utrecsports.org directly.');
+  }
+}
+
+async function openPrivacyPolicy() {
+  try {
+    await Linking.openURL(PRIVACY_POLICY_URL);
+  } catch {
+    Alert.alert('Couldn’t open privacy policy', `Visit ${PRIVACY_POLICY_URL} in your browser, or contact sriramsattiraju07@gmail.com.`);
   }
 }
 
@@ -143,6 +154,16 @@ export function Settings() {
           <Text className="text-gray-600 dark:text-neutral-400 text-base font-medium mt-3 leading-6">
             BevoFit helps you make the most of UT RecSports. Check gym hours, find facilities, browse classes, and get walking directions, all in one place.
           </Text>
+          <Pressable
+            accessibilityRole="link"
+            accessibilityLabel="Privacy Policy"
+            onPress={() => void openPrivacyPolicy()}
+            style={({ pressed }) => ({ minHeight: 44, opacity: pressed ? 0.6 : 1 })}
+            className="flex-row items-center justify-between mt-3"
+          >
+            <Text className="text-[#BF5700] text-base font-semibold">Privacy Policy</Text>
+            <Ionicons name="chevron-forward" size={18} color="#BF5700" accessible={false} />
+          </Pressable>
         </View>
         <Text className="text-gray-500 dark:text-neutral-500 text-xs text-center mt-6 mb-2">
           Version {APP_VERSION}

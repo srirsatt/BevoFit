@@ -3,7 +3,8 @@
 import React, { useEffect } from 'react';
 import { createBottomTabNavigator, BottomTabBar, BottomTabBarButtonProps, BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { useGymNotification } from '../contexts/GymNotificationContext';
-import { Pressable, useColorScheme, GestureResponderEvent } from 'react-native';
+import { Pressable, GestureResponderEvent } from 'react-native';
+import { useTheme } from '@react-navigation/native';
 import * as Haptics from 'expo-haptics';
 import Ionicons from "@expo/vector-icons/Ionicons";
 
@@ -40,8 +41,7 @@ function NotificationAwareTabBar(props: BottomTabBarProps) {
 }
 
 export default function ClassicTabs() {
-    const colorScheme = useColorScheme();
-    const isDarkMode = colorScheme === 'dark';
+    const { dark: isDarkMode } = useTheme();
 
     return (
         <Tab.Navigator

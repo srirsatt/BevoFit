@@ -5,7 +5,6 @@ import * as SplashScreen from 'expo-splash-screen';
 import React, { useEffect } from 'react';
 import { Platform } from 'react-native';
 import "../../global.css"
-import { useTensorflowModel, loadTensorflowModelOnce } from '../providers/ModelProvider';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { DemoModeProvider } from '../contexts/DemoModeContext';
@@ -15,25 +14,20 @@ import { NearbyAlertsProvider } from '../contexts/NearbyAlertsContext';
 import { GymNotificationProvider } from '../contexts/GymNotificationContext';
 import { AppearanceProvider, useAppearanceSettings } from '../contexts/AppearanceContext';
 
-Asset.loadAsync([
+void Asset.loadAsync([
   ...NavigationAssets,
-]);
+]).catch(() => {});
 
-SplashScreen.preventAutoHideAsync();
+void SplashScreen.preventAutoHideAsync().catch(() => {});
 
-function ModelPreloader() {
-  const { status } = useTensorflowModel();
+function LaunchReady() {
   const { ready: appearanceReady } = useAppearanceSettings();
-  // Kick off single-load at app startup
-  useEffect(() => {
-    loadTensorflowModelOnce();
-  }, []);
 
   useEffect(() => {
-    if (status === 'success' && appearanceReady) {
-      SplashScreen.hideAsync();
+    if (appearanceReady) {
+      void SplashScreen.hideAsync().catch(() => {});
     }
-  }, [status, appearanceReady]);
+  }, [appearanceReady]);
 
   return null;
 }
@@ -63,7 +57,7 @@ export default function TabLayout() {
           <BottomSheetModalProvider>
             <NearbyAlertsProvider>
               <GymNotificationProvider useClassic={useClassic}>
-                <ModelPreloader />
+                <LaunchReady />
                 {useClassic ? <ClassicTabs /> : (
                   <NativeTabs tintColor="#BF5700" labelStyle={{ fontSize: 10 }}>
                     <NativeTabs.Trigger name="index">

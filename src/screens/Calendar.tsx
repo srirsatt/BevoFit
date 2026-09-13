@@ -1,4 +1,6 @@
-import { StyleSheet, Text, View, ScrollView, useWindowDimensions, Pressable, useColorScheme, RefreshControl } from 'react-native';
+import { AppState, StyleSheet, Text, View, ScrollView, useWindowDimensions, Pressable, useColorScheme, RefreshControl } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
+import { formatCalendarDate, getCalendarClock, getCalendarWeek, sortClassesFromCurrentTime } from '../lib/calendarTime';
 import type { ViewToken } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
@@ -195,26 +197,6 @@ function translateStudioName(studio: string) {
 
 // TBD checker for diff pfp
 
-function getCurrentMinutes() {
-    const now = new Date();
-    return now.getHours() * 60 + now.getMinutes();
-}
-
-function sortClassesFromCurrentTime(classes: CalendarClass[]) {
-    const currentMinutes = getCurrentMinutes();
-
-    const sortedClasses = [...classes].sort((a, b) => a.startMinutes - b.startMinutes);
-
-    const upcomingClasses = sortedClasses.filter((classItem) => classItem.endMinutes >= currentMinutes);
-
-    const pastClasses = sortedClasses.filter((classItem) => classItem.endMinutes < currentMinutes);
-
-    return [...upcomingClasses, ...pastClasses];
-}
-
-
-
-
 const CalendarCard = ({ classItem, width, facilities }: { classItem: CalendarClass; width: number; facilities: FacilityMarker[] }) => {
     const scale = useSharedValue(1);
     const colorScheme = useColorScheme();
@@ -387,20 +369,14 @@ const BlankCard = ({ width }: { width: number; }) => {
 }
 
 function formatWeekRange(start: Date, end: Date) {
-    const format = (date: Date) => `${String(date.getMonth() + 1).padStart(2, "0")}/${String(date.getDate()).padStart(2, "0")}`;
+    const format = (date: Date) => `${String(date.getUTCMonth() + 1).padStart(2, "0")}/${String(date.getUTCDate()).padStart(2, "0")}`;
     return `${format(start)} - ${format(end)}`;
 }
 
-function getWeekAtGlanceDays(classes: CalendarClass[]) {
-    const today = new Date();
-    const weekStart = new Date(today);
-    weekStart.setHours(0, 0, 0, 0);
-    weekStart.setDate(today.getDate() - today.getDay());
-
-    return WEEKDAYS.map((day, index) => {
-        const date = new Date(weekStart);
-        date.setDate(weekStart.getDate() + index);
-        const isCurrentMonth = date.getMonth() === today.getMonth();
+function getWeekAtGlanceDays(classes: CalendarClass[], today: Date) {
+    return getCalendarWeek(today).map((date, index) => {
+        const day = WEEKDAYS[index];
+        const isCurrentMonth = date.getUTCMonth() === today.getUTCMonth();
 
         return {
             day,
@@ -416,14 +392,15 @@ function getWeekAtGlanceDays(classes: CalendarClass[]) {
 
 const WeekAtGlanceCard = ({
     days,
+    today,
     onSelectDay,
 }: {
     days: WeekAtGlanceDay[];
+    today: Date;
     onSelectDay: (day: WeekAtGlanceDay) => void;
 }) => {
     const isDarkMode = useColorScheme() === 'dark';
-    const today = new Date();
-    const monthLabel = today.toLocaleDateString("en-US", {
+    const monthLabel = formatCalendarDate(today, {
         month: "long",
         year: "numeric",
     });
@@ -447,13 +424,13 @@ const WeekAtGlanceCard = ({
 
             <View className="flex-row -mx-3">
                 {days.map((dayItem) => {
-                    const isToday = dayItem.date.toDateString() === today.toDateString();
+                    const isToday = dayItem.date.getTime() === today.getTime();
                     const classCount = dayItem.classes.length;
                     return (
                         <Pressable
-                            key={`${dayItem.day}-${dayItem.date.toDateString()}`}
+                            key={`${dayItem.day}-${dayItem.date.toISOString()}`}
                             accessibilityRole="button"
-                            accessibilityLabel={`${isToday ? 'Today, ' : ''}${dayItem.date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}, ${classCount} ${classCount === 1 ? 'class' : 'classes'}`}
+                            accessibilityLabel={`${isToday ? 'Today, ' : ''}${formatCalendarDate(dayItem.date, { weekday: 'long', month: 'long', day: 'numeric' })}, ${classCount} ${classCount === 1 ? 'class' : 'classes'}`}
                             accessibilityHint="Opens this day's events"
                             onPress={() => {
                                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -613,6 +590,33 @@ const AnimatedScrollView = Animated.createAnimatedComponent(ScrollView);
 
 
 export function Calendar() {
+    const [currentMinute, setCurrentMinute] = useState(() => Math.floor(Date.now() / 60000));
+    const clock = useMemo(() => getCalendarClock(new Date(currentMinute * 60000)), [currentMinute]);
+    // Refresh without another network request. Focus/foreground updates also
+    // catch midnight or clock changes while this screen was inactive.
+    useFocusEffect(useCallback(() => {
+        const refreshClock = () => setCurrentMinute(Math.floor(Date.now() / 60000));
+        refreshClock();
+        let timer: ReturnType<typeof setTimeout>;
+        const scheduleTick = () => {
+            timer = setTimeout(() => {
+                refreshClock();
+                scheduleTick();
+            }, 60000 - Date.now() % 60000);
+        };
+        if (AppState.currentState === 'active') scheduleTick();
+        const subscription = AppState.addEventListener('change', state => {
+            clearTimeout(timer);
+            if (state === 'active') {
+                refreshClock();
+                scheduleTick();
+            }
+        });
+        return () => {
+            clearTimeout(timer);
+            subscription.remove();
+        };
+    }, []));
     const [calendarClasses, setCalendarClasses] = useState<CalendarClass[]>([]);
     const scrollX = useSharedValue(0);
     const [loading, setLoading] = useState(true);
@@ -630,7 +634,13 @@ export function Calendar() {
     const snapInterval = cardWidth + cardGap;
     const { isDemoMode, setIsDemoMode } = useDemoMode();
     const weekSheetSnapPoints = useMemo(() => ["70%"], []);
-    const weekAtGlanceDays = useMemo(() => getWeekAtGlanceDays(calendarClasses), [calendarClasses]);
+    const calendarDate = useMemo(() => new Date(`${clock.dateKey}T00:00:00Z`), [clock.dateKey]);
+    const weekAtGlanceDays = useMemo(() => getWeekAtGlanceDays(calendarClasses, calendarDate), [calendarClasses, calendarDate]);
+    useEffect(() => {
+        setSelectedWeekDay(previous => previous
+            ? weekAtGlanceDays.find(day => day.day === previous.day) ?? null
+            : null);
+    }, [weekAtGlanceDays]);
     const weekViewabilityConfig = useRef({ itemVisiblePercentThreshold: 50 }).current;
     const onWeekClassesVisible = useCallback(({ viewableItems }: { viewableItems: ViewToken<CalendarClass>[] }) => {
         const indices = viewableItems.flatMap((item) => item.index === null ? [] : [item.index]);
@@ -656,7 +666,7 @@ export function Calendar() {
         await WebBrowser.warmUpAsync();
         let link = "https://www.imleagues.com/Shibboleth.sso/Login?target=https%3a%2f%2fwww.imleagues.com%2fIntegration%2fShibboleth%2fSingleSignOn.aspx%3fType%3dSHI%26SchID%3d4e7db0d3e9cc46a581a8a8da95bb5d56&entityID=https%3a%2f%2fenterprise.login.utexas.edu%2fidp%2fshibboleth";
         if (isDemoMode) {
-            link = "https://srirsatt.github.io/BevoFit/demoQR.html";
+            link = "https://sriramsattiraju.com/IMleaguesimg";
         }
         await WebBrowser.openBrowserAsync(link, {
             dismissButtonStyle: 'close',
@@ -668,9 +678,9 @@ export function Calendar() {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
         await WebBrowser.warmUpAsync();
-        let link = "https://apps.rs.utexas.edu/app/myrecsports/";
+        let link = "https://apps.rs.utexas.edu/app/myrecsports/texercise/";
         if (isDemoMode) {
-            link = "https://srirsatt.github.io/BevoFit/demoQR.html";
+            link = "https://sriramsattiraju.com/TeXerciseimg";
         }
         await WebBrowser.openBrowserAsync(link, {
             dismissButtonStyle: 'close',
@@ -753,15 +763,11 @@ export function Calendar() {
 
     const insets = useSafeAreaInsets();
 
-    const today = normalizeDay(
-        new Date().toLocaleDateString("en-US", {
-            weekday: "long",
-        })
-    ); // Monday - Sunday declaration
+    const today = normalizeDay(WEEKDAYS[clock.weekday]);
 
     const todayClasses = sortClassesFromCurrentTime(calendarClasses
         .filter((item) => normalizeDay(item.day) === today)
-        .sort((a, b) => a.startMinutes - b.startMinutes));
+        .sort((a, b) => a.startMinutes - b.startMinutes), clock.minutes);
     // filtering by Dates from supabase!
 
     const todayClassCount = todayClasses.length;
@@ -953,7 +959,7 @@ export function Calendar() {
                         <Text className="text-gray-500 dark:text-neutral-500 text-xs uppercase mt-1.3 mb-3">This Week at a glance</Text>
                     )}
 
-                    <WeekAtGlanceCard days={weekAtGlanceDays} onSelectDay={openWeekDaySheet} />
+                    <WeekAtGlanceCard days={weekAtGlanceDays} today={calendarDate} onSelectDay={openWeekDaySheet} />
                 </View>
             </ScrollView>
 
@@ -971,7 +977,7 @@ export function Calendar() {
                             {selectedWeekDay?.day}
                         </Text>
                         <Text className="text-gray-500 dark:text-neutral-400 text-base mt-1">
-                            {selectedWeekDay?.date.toLocaleDateString("en-US", { month: "long", day: "numeric" })}
+                            {selectedWeekDay && formatCalendarDate(selectedWeekDay.date, { month: "long", day: "numeric" })}
                         </Text>
                         <Text className="text-[#BF5700] text-sm font-semibold mt-3">
                             {selectedWeekDay?.classes.length ?? 0} {(selectedWeekDay?.classes.length ?? 0) === 1 ? "class" : "classes"} scheduled
