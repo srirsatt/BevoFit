@@ -5,8 +5,9 @@ provided by the project owner on September 13, 2026. Each was resized from
 1206 by 2622 pixels to 630 pixels wide with its aspect ratio preserved.
 The screen contents were not edited or cropped.
 
-`bevofit-banner.png` combines the Home screenshot with the app icon from `assets/icon.png`,
-typeset copy, and simple court markings. It is 1600 by 900 pixels. To regenerate
+`bevofit-banner.png` pairs the unaltered Home screenshot with the app icon from
+`assets/icon.png` and a short description on a white background. It is 1040 by
+640 pixels, with a slim rounded phone frame around the screenshot. To regenerate
 it on macOS, run this from the repository root:
 
 ```sh

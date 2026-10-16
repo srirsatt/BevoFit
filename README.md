@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/images/bevofit-banner.png" width="1200" alt="BevoFit. Gym hours, classes, and campus directions, built for UT Austin. The app's Home screen shows open gyms and time until closing.">
+  <img src="docs/images/bevofit-banner.png" width="1200" alt="BevoFit: gym hours and class schedules for UT Austin, with a screenshot of the Home screen.">
 </p>
 
 <p align="center">
@@ -12,7 +12,7 @@
 
 # BevoFit
 
-A little less planning, a little more time at the gym. BevoFit brings UT Austin RecSports hours, facilities, and classes into one app, so you can find an open gym, fit a class between lectures, and get walking directions across campus.
+BevoFit is an iOS app for UT Austin RecSports gym hours, facility details, and class schedules. Check which gyms are open, browse classes, and get walking directions across campus.
 
 Browsing doesn't require a BevoFit account. Scan In, TeXercise, and IMLeagues open the relevant UT services, where you sign in with your UT credentials when required.
 
