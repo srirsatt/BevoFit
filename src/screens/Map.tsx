@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import MapView, { Marker, Callout } from 'react-native-maps';
 import { FullWindowOverlay } from 'react-native-screens';
-import { StyleSheet, View, Text, Pressable, useColorScheme } from 'react-native';
+import { Alert, Platform, StyleSheet, View, Text, Pressable, useColorScheme } from 'react-native';
+import * as Location from 'expo-location';
 import { useFacilities } from '../hooks/useFacilities';
 import type { FacilityMarker } from '../lib/facilities';
 import { BottomSheetModal, BottomSheetView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
@@ -34,6 +35,16 @@ export function Map() {
     const { markers: pins } = useFacilities();
     const colorScheme = useColorScheme();
     const isDarkMode = colorScheme === 'dark';
+    const [showUserLocation, setShowUserLocation] = useState(Platform.OS !== 'android');
+
+    useEffect(() => {
+        if (Platform.OS !== 'android') return;
+        let cancelled = false;
+        void Location.requestForegroundPermissionsAsync()
+            .then(({ granted }) => { if (!cancelled) setShowUserLocation(granted); })
+            .catch(() => { if (!cancelled) setShowUserLocation(false); });
+        return () => { cancelled = true; };
+    }, []);
 
     // variables for bottomsheetmodal
     const [selectedFacilityId, setSelectedFacilityId] = useState<string | null>(null);
@@ -111,14 +122,23 @@ export function Map() {
     );
 
     // directions button press action
-    const openDirections = (addr: string | undefined, name: string | undefined) => {
+    const openDirections = async (facility: FacilityMarker | undefined) => {
+        if (!facility) return;
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-        showLocation({
-            address: addr,
-            directionsMode: 'walk',
-            title: name,
-            appsWhiteList: ['apple-maps']
-        });
+        try {
+            await showLocation({
+                latitude: facility.lat,
+                longitude: facility.lng,
+                address: facility.addr,
+                directionsMode: 'walk',
+                title: facility.name,
+                appsWhiteList: Platform.OS === 'android' ? ['google-maps'] : ['apple-maps'],
+                alwaysIncludeGoogle: Platform.OS === 'android',
+                googleForceLatLon: Platform.OS === 'android',
+            });
+        } catch {
+            Alert.alert('Couldn’t open directions', 'Please try again or search for this facility in your maps app.');
+        }
     }
 
     return (
@@ -131,7 +151,7 @@ export function Map() {
                     latitudeDelta: 0.009380758294785352,
                     longitudeDelta: 0.006013015735092608,
                 }}
-                showsUserLocation={true}
+                showsUserLocation={showUserLocation}
                 onUserLocationChange={({ nativeEvent }) => {
                     latestOriginRef.current = nativeEvent.coordinate ?? null;
                 }}
@@ -202,7 +222,7 @@ export function Map() {
                                 className="w-full bg-[#BF5700] h-[49px] mt-5 rounded-xl items-center justify-center"
                                 onPressIn={() => { directionsScale.value = withTiming(0.95, { duration: 80 }); }}
                                 onPressOut={() => { directionsScale.value = withTiming(1, { duration: 100 }); }}
-                                onPress={() => openDirections(selectedFacility?.addr, selectedFacility?.name)}
+                                onPress={() => void openDirections(selectedFacility)}
                             >
                                 <Text className="text-white font-bold text-lg ">Directions</Text>
                             </AnimatedPressable>
