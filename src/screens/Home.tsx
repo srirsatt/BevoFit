@@ -1,4 +1,4 @@
-import { StyleSheet, View, Text, ScrollView, Pressable, ActivityIndicator, RefreshControl, TouchableOpacity, Alert, Appearance, useColorScheme } from 'react-native';
+import { StyleSheet, View, Text, ScrollView, Pressable, ActivityIndicator, RefreshControl, TouchableOpacity, Alert, Appearance, Platform, useColorScheme } from 'react-native';
 import { Image } from 'expo-image';
 import Animated, {
   useSharedValue,
@@ -352,11 +352,17 @@ export function Home() {
   useEffect(() => {
     let active = true;
     // Gym loading no longer waits for device identification.
-    if (Application.getIosIdForVendorAsync) {
-      void Application.getIosIdForVendorAsync()
-        .then((id) => { if (active) setDeviceId(id); })
-        .catch((error) => console.error('Could not load device identifier:', error));
-    }
+    const loadDeviceId = async () => {
+      try {
+        const id = Platform.OS === 'android'
+          ? Application.getAndroidId()
+          : Platform.OS === 'ios' ? await Application.getIosIdForVendorAsync() : null;
+        if (active) setDeviceId(id);
+      } catch (error) {
+        console.error('Could not load device identifier:', error);
+      }
+    };
+    void loadDeviceId();
     return () => { active = false; };
   }, []);
 
