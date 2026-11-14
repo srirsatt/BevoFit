@@ -1,5 +1,14 @@
+<h1 align="center">BevoFit</h1>
+
 <p align="center">
-  <img src="docs/images/bevofit-banner.png" width="1200" alt="BevoFit: gym hours and class schedules for UT Austin, with a screenshot of the Home screen.">
+  Gym hours, classes, and campus maps for UT Austin.
+</p>
+
+<p align="center">
+  <a href="https://expo.dev"><img src="https://img.shields.io/badge/Expo-SDK%2054-000020?style=flat&amp;logo=expo&amp;logoColor=white" alt="Expo SDK 54"></a>
+  <a href="https://reactnative.dev"><img src="https://img.shields.io/badge/React_Native-0.81.5-149ECA?style=flat&amp;logo=react&amp;logoColor=white" alt="React Native 0.81.5"></a>
+  <a href="https://www.typescriptlang.org"><img src="https://img.shields.io/badge/TypeScript-5.9-3178C6?style=flat&amp;logo=typescript&amp;logoColor=white" alt="TypeScript 5.9"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-3B3B3B?style=flat" alt="MIT license"></a>
 </p>
 
 <p align="center">
@@ -7,12 +16,10 @@
 </p>
 
 <p align="center">
-  <a href="#the-app">The app</a> · <a href="#how-it-works">Architecture</a> · <a href="#run-locally">Run locally</a> · <a href="docs/app-store-release.md">Release guide</a>
+  <a href="#the-app">The app</a> · <a href="#how-it-works">Architecture</a> · <a href="#run-locally">Run locally</a> · <a href="docs/app-store-release.md">iOS release</a> · <a href="docs/android-apk.md">Android APK</a>
 </p>
 
-# BevoFit
-
-BevoFit is an iOS app for UT Austin RecSports gym hours, facility details, and class schedules. Check which gyms are open, browse classes, and get walking directions across campus.
+BevoFit helps you find open UT Austin RecSports facilities, browse class schedules, and get walking directions across campus. It's available on the App Store and as a standalone Android APK.
 
 Browsing doesn't require a BevoFit account. Scan In, TeXercise, and IMLeagues open the relevant UT services, where you sign in with your UT credentials when required.
 
@@ -21,14 +28,14 @@ Browsing doesn't require a BevoFit account. Scan In, TeXercise, and IMLeagues op
 | Find a place | Make a plan | Get there |
 | :--- | :--- | :--- |
 | <img src="docs/images/home.png" width="260" alt="Home screen with Scan In and open gym hours"> | <img src="docs/images/calendar.png" width="260" alt="Calendar with class details, TeXercise, IMLeagues, and the weekly schedule"> | <img src="docs/images/map.png" width="260" alt="Campus map with UT RecSports facility markers"> |
-| See which gyms are open and how long you have before closing. Check facility photos, amenities, activities, and weekly hours. | Browse today's RecSports classes and the week ahead, with times, instructors, and studios. Open TeXercise or IMLeagues from the calendar. | Explore the campus map, view a facility's address, and get Apple Maps walking directions with an estimated walk time when available. |
+| Check open status, closing times, photos, amenities, and weekly hours. | Browse classes, instructors, and studios. Open TeXercise or IMLeagues from the calendar. | Find facilities on the campus map and open walking directions in Apple Maps or Google Maps. |
 
 There are a few useful extras, too:
 
 - **Crowd reports.** Share how busy a gym feels and see an estimate based on reports from the last 30 minutes.
-- **Nearby Gym Alerts.** Opt in to notifications when you're near an open gym. Tapping an alert opens that gym's details.
+- **Nearby Gym Alerts (iOS).** Opt in to notifications when you're near an open gym. Tapping an alert opens that gym's details.
 - **Saved gym info.** Previously loaded facility data can appear immediately while the app refreshes, including when a connection drops.
-- **Your preferred appearance.** Choose Light, Dark, or System Default. iOS 26 uses native tabs, with a classic tab bar on older versions.
+- **Your preferred appearance.** Choose Light, Dark, or System Default. iOS 26 uses native tabs; older iOS versions and Android use a classic tab bar.
 
 ## How it works
 
@@ -39,7 +46,7 @@ flowchart TB
     subgraph app[BevoFit · React Native + Expo]
         screens[Home · Calendar · Map · Settings]
         cache[Shared facility cache]
-        native[Native iOS features]
+        native[Native device services]
         screens <--> cache
         screens <--> native
     end
@@ -47,15 +54,15 @@ flowchart TB
     db[(Supabase Postgres)]
     images[Supabase Storage]
     local[(AsyncStorage)]
-    maps[Apple Maps / MapKit]
-    alerts[Location + local notifications]
+    maps[Apple Maps / Google Maps]
+    alerts[iOS location + local notifications]
     ut[UT Scan In · TeXercise · IMLeagues]
 
     cache <-->|Facilities + hours + amenities| db
     cache <-->|Saved facilities| local
     screens <-->|Classes + crowd reports| db
     images -->|Facility photos| screens
-    native <-->|Walking directions + ETA| maps
+    native <-->|Walking directions + iOS walking estimates| maps
     native <-->|Gym entry + notification taps| alerts
     screens -->|In-app browser| ut
 
@@ -94,26 +101,39 @@ Database migrations and seed data are not included in this repository. A fresh S
 
 ## Run locally
 
-Use Node.js 20.19.4 or newer, npm, and a Supabase project with the app's data. For iOS development, use macOS with Xcode and an installed simulator runtime.
+### Requirements
+
+- Node.js **20.19.4 or newer** and npm.
+- A Supabase project with the app's tables, data, and access policies.
+- **iOS:** macOS, Xcode, and an installed simulator runtime or connected iPhone.
+- **Android:** the Android SDK and an emulator or connected Android phone. Configure the Maps key using the [Android setup guide](docs/android-apk.md#google-maps-setup).
+
+### 1. Install dependencies
 
 ```sh
 npm ci
 ```
+
+### 2. Configure the environment
 
 Create `.env` in the project root:
 
 ```dotenv
 EXPO_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 EXPO_PUBLIC_SUPABASE_PUBLISHABLE=your-publishable-key
+
+# Required for Android maps
+ANDROID_GOOGLE_MAPS_API_KEY=your-android-maps-key
 ```
 
 Use a public publishable or legacy anon key. `EXPO_PUBLIC_` values are bundled into the app, so an administrative or service-role key does not belong here.
 
-Build and launch the iOS development client:
+### 3. Start a development build
 
-```sh
-npm run ios
-```
+| Platform | Build and launch |
+| :--- | :--- |
+| iOS | `npm run ios` |
+| Android | `npm run android` |
 
 For later sessions with the development client already installed:
 
@@ -121,18 +141,23 @@ For later sessions with the development client already installed:
 npm start
 ```
 
-A native development build is required for the local Swift modules and native features. Expo Go does not contain those modules. Android has a build command (`npm run android`), but the custom walking-time and nearby-alert features are implemented for iOS.
+A native development build is required for the app's native features and local Swift modules. Expo Go does not contain those modules. Nearby Gym Alerts and in-app walking-time estimates are available on iOS; Android walking directions open Google Maps.
 
-To share a standalone Android APK, follow the [Android APK guide](docs/android-apk.md).
-
-To check a change:
+### 4. Run checks
 
 ```sh
 npm test
 npm run typecheck
 ```
 
-The tests cover calendar time handling, facility caching, gym details, geofencing, overlapping gym boundaries, notification routing, and release environment validation. Build and submission steps are in the [App Store release guide](docs/app-store-release.md).
+The tests cover calendar time handling, facility caching, gym details, Android directions and device identification, geofencing, overlapping gym boundaries, notification routing, and release environment validation.
+
+### Release guides
+
+| Platform | Guide |
+| :--- | :--- |
+| iOS | [Build and submit to the App Store](docs/app-store-release.md) |
+| Android | [Build and share a signed APK](docs/android-apk.md) |
 
 <details>
 <summary><strong>Find your way around the code</strong></summary>
