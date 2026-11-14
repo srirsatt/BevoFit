@@ -123,6 +123,8 @@ npm start
 
 A native development build is required for the local Swift modules and native features. Expo Go does not contain those modules. Android has a build command (`npm run android`), but the custom walking-time and nearby-alert features are implemented for iOS.
 
+To share a standalone Android APK, follow the [Android APK guide](docs/android-apk.md).
+
 To check a change:
 
 ```sh
