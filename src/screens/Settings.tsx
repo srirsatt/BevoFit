@@ -131,7 +131,9 @@ export function Settings() {
             Get notified when you’re near an open UT gym.
           </Text>
           <Text className="text-gray-600 dark:text-neutral-400 text-base font-medium mt-2 leading-6">
-            Requires notifications and location access set to “Always” with “Precise Location” enabled.
+            {supported
+              ? 'Requires notifications and location access set to “Always” with “Precise Location” enabled.'
+              : 'Nearby Gym Alerts are currently available on iPhone only.'}
           </Text>
           {status.issue && (
             <View className="mt-4">
