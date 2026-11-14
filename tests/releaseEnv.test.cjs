@@ -14,6 +14,14 @@ test('missing environment fails before building and identifies only variable nam
   assert.throws(() => validateReleaseEnv({ ...valid, EXPO_PUBLIC_SUPABASE_PUBLISHABLE: ' ' }), /Missing/);
 });
 
+test('Android cloud builds require a Maps key before compiling an unusable map', () => {
+  const android = { ...valid, EAS_BUILD_PLATFORM: 'android' };
+  assert.throws(() => validateReleaseEnv(android), /ANDROID_GOOGLE_MAPS_API_KEY/);
+  assert.throws(() => validateReleaseEnv({ ...android, ANDROID_GOOGLE_MAPS_API_KEY: ' ' }), /ANDROID_GOOGLE_MAPS_API_KEY/);
+  assert.doesNotThrow(() => validateReleaseEnv({ ...android, ANDROID_GOOGLE_MAPS_API_KEY: 'test-maps-key' }));
+  assert.doesNotThrow(() => validateReleaseEnv({ ...valid, EAS_BUILD_PLATFORM: 'ios' }));
+});
+
 test('malformed and insecure backend URLs are rejected', () => {
   for (const url of ['localhost', 'http://example.supabase.co', 'file:///tmp/backend']) {
     assert.throws(() => validateReleaseEnv({ ...valid, EXPO_PUBLIC_SUPABASE_URL: url }), /HTTPS/);
