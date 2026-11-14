@@ -1,5 +1,6 @@
 function validateReleaseEnv(env) {
   const required = ['EXPO_PUBLIC_SUPABASE_URL', 'EXPO_PUBLIC_SUPABASE_PUBLISHABLE'];
+  if (env.EAS_BUILD_PLATFORM === 'android') required.push('ANDROID_GOOGLE_MAPS_API_KEY');
   const missing = required.filter((name) => !env[name]?.trim());
   if (missing.length) {
     throw new Error(`Missing build environment variables: ${missing.join(', ')}. Configure them in the EAS environment selected by this build profile.`);
