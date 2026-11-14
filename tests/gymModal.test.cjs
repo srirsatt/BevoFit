@@ -15,6 +15,11 @@ const callback = name => home.body.statements.flatMap(node => ts.isVariableState
 const notificationEffect = home.body.statements.find(node => ts.isExpressionStatement(node)
   && ts.isCallExpression(node.expression) && node.expression.expression.getText(source) === 'useEffect'
   && node.getText(source).includes('consumeGymNotification(pendingGym.notificationId)'));
+const deviceEffect = home.body.statements.find(node => ts.isExpressionStatement(node)
+  && ts.isCallExpression(node.expression) && node.expression.expression.getText(source) === 'useEffect'
+  && node.getText(source).includes('Application.getIosIdForVendorAsync'));
+const deviceCode = ts.transpileModule(`exports.identify = ${deviceEffect.expression.arguments[0].getText(source)};`,
+  { compilerOptions: { target: ts.ScriptTarget.ES2020, module: ts.ModuleKind.CommonJS } }).outputText;
 const code = ts.transpileModule(`
   const handleModalPress = ${callback('handleModalPress')};
   exports.open = handleModalPress;
@@ -41,6 +46,33 @@ function setup(overrides = {}) {
   };
   vm.runInNewContext(code, env);
   return { state, env, ...exports };
+}
+
+for (const platform of ['android', 'ios']) {
+  test(`${platform} crowd reports receive the platform's device identifier`, async () => {
+    const state = { id: null, errors: [] };
+    const exports = {};
+    vm.runInNewContext(deviceCode, {
+      exports, Platform: { OS: platform },
+      Application: {
+        getAndroidId: () => {
+          assert.equal(platform, 'android');
+          return '0123456789abcdef';
+        },
+        getIosIdForVendorAsync: async () => {
+          assert.equal(platform, 'ios');
+          return '12345678-1234-1234-1234-123456789abc';
+        },
+      },
+      setDeviceId: id => { state.id = id; },
+      console: { error: (...args) => state.errors.push(args) },
+    });
+    const cleanup = exports.identify();
+    await new Promise(resolve => setImmediate(resolve));
+    assert.equal(state.id, platform === 'android' ? '0123456789abcdef' : '12345678-1234-1234-1234-123456789abc');
+    assert.deepEqual(state.errors, []);
+    cleanup();
+  });
 }
 
 test('tap waits for Home focus, gym loading, and recovery from fetch errors', () => {
