@@ -1,4 +1,4 @@
-import { AppState, StyleSheet, Text, View, ScrollView, useWindowDimensions, Pressable, useColorScheme, RefreshControl } from 'react-native';
+import { Alert, AppState, Platform, StyleSheet, Text, View, ScrollView, useWindowDimensions, Pressable, useColorScheme, RefreshControl } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { formatCalendarDate, getCalendarClock, getCalendarWeek, sortClassesFromCurrentTime } from '../lib/calendarTime';
 import type { ViewToken } from 'react-native';
@@ -211,16 +211,20 @@ const CalendarCard = ({ classItem, width, facilities }: { classItem: CalendarCla
 
         await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
-        setTimeout(() => {
-            showLocation({
+        try {
+            await showLocation({
                 address: facility.addr,
                 latitude: facility.lat,
                 longitude: facility.lng,
                 directionsMode: "walk",
                 title: facility.name,
-                appsWhiteList: ["apple-maps"],
+                appsWhiteList: Platform.OS === 'android' ? ['google-maps'] : ['apple-maps'],
+                alwaysIncludeGoogle: Platform.OS === 'android',
+                googleForceLatLon: Platform.OS === 'android',
             });
-        }, 40);
+        } catch {
+            Alert.alert('Couldn’t open directions', 'Please try again or search for this facility in your maps app.');
+        }
     };
 
     // what should the card look like!
