@@ -35,7 +35,7 @@ There are a few useful extras, too:
 - **Crowd reports.** Share how busy a gym feels and see an estimate based on reports from the last 30 minutes.
 - **Nearby Gym Alerts (iOS).** Opt in to notifications when you're near an open gym. Tapping an alert opens that gym's details.
 - **Saved gym info.** Previously loaded facility data can appear immediately while the app refreshes, including when a connection drops.
-- **Your preferred appearance.** Choose Light, Dark, or System Default. iOS 26 uses native tabs; older iOS versions and Android use a classic tab bar.
+- **Your preferred appearance.** Choose Light, Dark, or System Default. iOS 26 uses native (liquid glass) tabs; older iOS versions and Android use a classic tab bar.
 
 ## How it works
 
