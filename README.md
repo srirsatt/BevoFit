@@ -25,10 +25,27 @@ Browsing doesn't require a BevoFit account. Scan In, TeXercise, and IMLeagues op
 
 ## The app
 
-| Find a place | Make a plan | Get there |
-| :--- | :--- | :--- |
-| <img src="docs/images/home.png" width="260" alt="Home screen with Scan In and open gym hours"> | <img src="docs/images/calendar.png" width="260" alt="Calendar with class details, TeXercise, IMLeagues, and the weekly schedule"> | <img src="docs/images/map.png" width="260" alt="Campus map with UT RecSports facility markers"> |
-| Check open status, closing times, photos, amenities, and weekly hours. | Browse classes, instructors, and studios. Open TeXercise or IMLeagues from the calendar. | Find facilities on the campus map and open walking directions in Apple Maps or Google Maps. |
+<table>
+  <thead>
+    <tr>
+      <th width="33.33%" align="left">Find a place</th>
+      <th width="33.33%" align="left">Make a plan</th>
+      <th width="33.33%" align="left">Get there</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td align="center"><img src="docs/images/home.png" width="260" alt="Home screen with Scan In and open gym hours"></td>
+      <td align="center"><img src="docs/images/calendar.png" width="260" alt="Calendar with class details, TeXercise, IMLeagues, and the weekly schedule"></td>
+      <td align="center"><img src="docs/images/map.png" width="260" alt="Campus map with UT RecSports facility markers"></td>
+    </tr>
+    <tr>
+      <td>Check open status, closing times, photos, amenities, and weekly hours.</td>
+      <td>Browse classes, instructors, and studios. Open TeXercise or IMLeagues from the calendar.</td>
+      <td>Find facilities on the campus map and open walking directions in Apple Maps or Google Maps.</td>
+    </tr>
+  </tbody>
+</table>
 
 There are a few useful extras, too:
 
